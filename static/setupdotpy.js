@@ -104,8 +104,8 @@ jQuery(document).ready(function() {
 
     // Format and filter the modules, packages
     function formatApps(app_string) {
-        var apps = app_string.replace(/\.py|\'|\"/, '');
-        apps = apps.split(/\r\n|\r|\n/);
+        var apps = app_string.replace(/\.py|\'|\"/g, '');
+        apps = apps.split(/\r\n|\r|\n|,/);
         if (apps.length == 1 && apps[0] == '') {
             return '';
         }
