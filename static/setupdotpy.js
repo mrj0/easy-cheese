@@ -48,7 +48,7 @@ jQuery(document).ready(function() {
         scaffold += "setup(name='"+name+"',\n";
         scaffold += "    version='"+version+"',\n";
         scaffold += "    description='"+description+"',\n";
-        scaffold += "    long_description='"+long_description+"',\n";
+        scaffold += "    long_description='''"+long_description+"''',\n";
         if(modules.length) {
             scaffold += "    py_modules='["+modules+"]',\n";
         }
