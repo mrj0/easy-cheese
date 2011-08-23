@@ -40,6 +40,7 @@
             </p>
         </fieldset>
         <fieldset id="actions">
+            <p id="errors"></p>
             <button id="button_display">Display setup.py</button>
             <input id="submit_download" name="download" type="submit" value="Download">
         </fieldset>

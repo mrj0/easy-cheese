@@ -43,6 +43,22 @@ jQuery(document).ready(function() {
         var packages = formatApps(raw_packages);        
         var modules = formatApps(raw_modules);
 
+        var errors = [];
+        if(isFieldEmpty(name)) {
+            errors.push('Please add the <strong>Name</strong> of the package');
+        }
+        if(isFieldEmpty(version)) {
+            errors.push('Please add the <strong>Version</strong> of the package');
+        }
+        if(allFieldsEmpty([packages, modules])) {
+            errors.push('Please add <strong>Packages</strong> and/or <strong>Modules</strong>');
+        }
+
+        if(errors.length) {
+            $('#errors').html('<ul><li>' + errors.join('</li><li>') + '</li></ul>');
+            return false;
+        }
+
         var scaffold = "#!/usr/bin/env python\n\n";
         scaffold += "from distutils.core import setup \n\n";
         scaffold += "setup(name='"+name+"',\n";
@@ -65,8 +81,14 @@ jQuery(document).ready(function() {
         event.preventDefault();
 
         var scaffold = setupScaffold();
+        // If it didn't validate then show the errors and abort
+        if(scaffold === false) {
+            return false;
+        }
+
         var content = modal.children('textarea');
         content.val(scaffold);
+
         // Position it at the centre of the screen horizontally
         modal.css('left', ($(window).width() - modal.width()) / 2);
 
@@ -85,11 +107,31 @@ jQuery(document).ready(function() {
         var apps = app_string.replace(/\.py|\'|\"/, '');
         apps = apps.split(/\r\n|\r|\n/);
         if (apps.length == 1 && apps[0] == '') {
-            return [];
+            return '';
         }
         if(apps == []) {
-            return [];
+            return '';
         }
         return "'" + apps.join("', '") + "'";
+    }
+
+    function isFieldEmpty(value) {
+        return !Boolean(value.trim().length);
+    }
+
+    function allFieldsEmpty(fields) {
+        var all_empty = true;
+
+        for(i=0; i<fields.length; i++) {
+            if(!fields[i].length) {
+                continue;
+            }
+            if(fields[i].trim().length) {
+                all_empty = false;
+                break;
+            }
+        }
+
+        return all_empty;
     }
 });
