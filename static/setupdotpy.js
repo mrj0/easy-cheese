@@ -3,6 +3,21 @@ jQuery(document).ready(function() {
 
     // Build the modal dialog
     var modal = $('<div>').attr('id', 'setupdotpy_modal');
+    modal.append(
+        $('<a>').attr({
+            'id': 'modal_close',
+            'href': '#'
+        })
+        .text('Close')
+    );
+    modal.append('<br>');
+    modal.append(
+        $('<textarea>').attr({
+            'cols': 60,
+            'rows': 20
+        })
+    );
+
 
     // Use jqModal plugin to turn it into a modal dialog
     modal.jqm().hide();
@@ -28,8 +43,7 @@ jQuery(document).ready(function() {
         var packages = formatApps(raw_packages);        
         var modules = formatApps(raw_modules);
 
-        var scaffold = '<textarea cols="60" rows="20">';
-        scaffold += "#!/usr/bin/env python\n\n";
+        var scaffold = "#!/usr/bin/env python\n\n";
         scaffold += "from distutils.core import setup \n\n";
         scaffold += "setup(name='"+name+"',\n";
         scaffold += "    version='"+version+"',\n";
@@ -41,7 +55,7 @@ jQuery(document).ready(function() {
         if(packages.length) {
             scaffold += "    packages='["+packages+"]',\n";
         }
-        scaffold += ")</textarea>";
+        scaffold += ")";
 
         return scaffold;
     }
@@ -51,14 +65,19 @@ jQuery(document).ready(function() {
         event.preventDefault();
 
         var scaffold = setupScaffold();
-        modal.html(scaffold);
+        var content = modal.children('textarea');
+        content.val(scaffold);
         // Position it at the centre of the screen horizontally
         modal.css('left', ($(window).width() - modal.width()) / 2);
 
         // Show it and highlight the text for easy Copy
         modal.jqmShow();
-        var content = modal.children('textarea');
         content.focus().select();
+    });
+
+    $('#modal_close').click(function(event, target) {
+        event.preventDefault();
+        modal.hide();
     });
 
     // Format and filter the modules, packages
