@@ -30,13 +30,13 @@
             </p>
             <p>
                 <label for="textarea_package_packages">Packages to include</label>
-                <textarea id="textarea_package_packages" name="packages" cols="40" rows="8"></textarea>
-                <span class="field_desc">One per line</span>
+                <input id="textarea_package_packages" name="packages" size="80"></textarea>
+                <span class="field_desc">Separate names with commas</span>
             </p>
             <p>
                 <label for="textarea_package_modules">Modules to include</label>
-                <textarea id="textarea_package_modules" name="modules" cols="40" rows="8"></textarea>
-                <span class="field_desc">One per line</span>
+                <input id="textarea_package_modules" name="modules" size="80"></textarea>
+                <span class="field_desc">Separate names with commas</span>
             </p>
         </fieldset>
         <fieldset id="actions">
