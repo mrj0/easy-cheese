@@ -1,6 +1,11 @@
 import re
+import os
 
+import bottle
 from bottle import get, post, static_file, request, route, run, template, view
+
+bottle.debug()
+bottle.TEMPLATE_PATH.append(os.path.dirname(__file__))
 
 @get('/')
 def display_form():
@@ -44,5 +49,6 @@ def download():
 def static_serve(filename):
     return static_file(filename, root='static')
 
-if __name__ == "__main__":
-    run(host='localhost', port=8080)
+def application(environ, start_response):
+    return bottle.app()(environ, start_response)
+
