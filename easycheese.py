@@ -2,14 +2,15 @@ import re
 import os
 
 import bottle
-from bottle import get, post, static_file, request, route, run, template, view
+from bottle import get, post, static_file, request, route, run, view
+from bottle import jinja2_template as template
 
 bottle.debug()
-bottle.TEMPLATE_PATH.append(os.path.dirname(__file__))
+bottle.TEMPLATE_PATH.append(os.path.join(os.path.dirname(__file__), 'templates'))
 
 @get('/')
 def display_form():
-    return template('setupdotpy_form')
+    return template('form.html')
 
 @post('/')
 @view('setupdotpy_out')
@@ -52,3 +53,5 @@ def static_serve(filename):
 def application(environ, start_response):
     return bottle.app()(environ, start_response)
 
+if __name__ == '__main__':
+    run(host='localhost', port=8080)
