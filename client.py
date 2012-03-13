@@ -1,6 +1,5 @@
-from itertools import islice
-from dulwich.client import HttpGitClient
-from dulwich.repo import Repo
+#from dulwich.client import HttpGitClient
+#from dulwich.repo import Repo
 import requests
 import simplejson as json
 from urlparse import urlparse
