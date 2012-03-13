@@ -18,21 +18,22 @@ class Setup(object):
 
     @property
     def required_fields(self):
-        return ('name',
-                'description',
-                'version',
-                'long_description',
-            )
+        return (
+            'name',
+            'description',
+            'version',
+            'long_description',
+        )
 
     def required(self):
         return map(lambda x: (x, getattr(self, x),), self.required_fields)
 
     @property
-    def module_list(self):
+    def module_str(self):
         return ', '.join(map(pyquote, self.modules))
 
     @property
-    def package_list(self):
+    def package_str(self):
         return ', '.join(map(pyquote, self.packages))
 
     def is_valid(self):

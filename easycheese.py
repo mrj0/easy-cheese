@@ -23,8 +23,6 @@ def clean_packages(input):
     """
     Take a string of package input, possibly delimited by ',', and
     return a list.
-
-    Attempts to clean package names
     """
     return re.findall(identifiers, input)
 
