@@ -51,7 +51,7 @@ def download():
     return static_file('setup\.py', download='setup.py')
 
 
-@route('/static/:filename#.*(\.js|\.css)#')
+@route('/static/:filename#.*(\.js|\.css|\.png)#')
 def static_serve(filename):
     return static_file(filename, root='static')
 
