@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    <link href="/static/pretty/prettify.css" type="text/css" rel="stylesheet">
+    <script type="text/javascript" src="/static/pretty/prettify.js"></script>
+{% endblock %}
+
+{% block content %}
+
+    <script>
+    $(window).ready(function() {
+        prettyPrint();
+    });
+    </script>
+
+    <div class="row">
+        <div class="span12">
+            <pre class="prettyprint">
+{{ setup }}
+            </pre>
+        </div>
+    </div>
+
+{% endblock content %}

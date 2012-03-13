@@ -2,3 +2,5 @@
 
 #setup_required_fields label { margin-top: 1em; }
 #setup_required_fields .help-block { margin-top: -10px; display: block; }
+
+pre { width: 100%; }
