@@ -3,6 +3,9 @@ from template import template
 import jinja2
 import simplejson as json
 from wtforms import form, fields
+import logging
+
+log = logging.getLogger(__name__)
 
 safe_string = jinja2.Markup
 
@@ -14,7 +17,8 @@ readme_file_pattern = re.compile('readme(\..*)?$', re.I)
 from trove import all_classifiers
 license_choices = [tuple([c[11:]] * 2) for c in all_classifiers
                     if c.startswith('License :: ')]
-classifier_choices = [tuple([c] * 2) for c in all_classifiers]
+classifier_choices = [tuple([c] * 2) for c in all_classifiers
+                    if not c.startswith('License :: ')]
 
 FIELDS = ('name', 'version', 'description', 'long_description',
           'url', 'author', 'author_email', 'readme', 'modules', 'packages',)
@@ -68,6 +72,7 @@ class Setup(form.Form):
     long_description = fields.TextAreaField()
     url = fields.TextField()
     license = fields.SelectField(choices=license_choices)
+    classifiers = fields.SelectMultipleField(choices=classifier_choices)
 
     # lists
     modules = fields.TextField()
@@ -78,6 +83,8 @@ class Setup(form.Form):
         self.readme = None
         if self.license.data == 'None':
             self.license.data = None
+        if self.classifiers.data == 'None':
+            self.classifiers.data = None
 
     def as_hidden(self):
         data = self.data
@@ -90,4 +97,8 @@ class Setup(form.Form):
 
 class SetupDistutils(Setup):
     def generate(self):
-        return safe_string(template(SETUP_PY_TEMPLATE, setup=self))
+        try:
+            return safe_string(template(SETUP_PY_TEMPLATE, setup=self))
+        except Exception:
+            log.exception('Failed to generate setup.py')
+            return 'Error generating setup.py'

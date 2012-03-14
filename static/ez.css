@@ -13,3 +13,7 @@ ul.errors {
     list-style: none;
     margin: 0;
 }
+
+#setup input[type=text], #setup select, #setup textarea { width: 660px; }
+
+#setup #classifiers { height: 200px; }

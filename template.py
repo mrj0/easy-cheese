@@ -63,10 +63,15 @@ def show_field(field, setup):
     value = field.data
 
     if name in ('packages', 'modules') and value:
-        return '[{}]'.format(', '.join([pyquote(p) for p in clean_identifiers(value)]))
+        return '[{}]'.format(
+            ', '.join([pyquote(p) for p in clean_identifiers(value)]))
 
     if name == 'long_description' and setup.readme:
         return 'read_file({})'.format(pyquote(setup.readme))
+
+    if name == 'classifiers' and value:
+        return '[\n        {}\n    ]'.format(
+            ',\n        '.join([pyquote(c) for c in value]))
 
     if not value:
         return safe_string('<span class="nocode">{}</span>'.format(field))

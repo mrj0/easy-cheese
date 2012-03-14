@@ -4,7 +4,13 @@ from generator import create_setup, SetupDistutils
 from template import template
 
 import bottle
-from bottle import get, post, static_file, request, route, run, FormsDict
+from bottle import get, post, static_file, request, route, run
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s %(asctime)s %(pathname)s %(lineno)d %(message)s')
 
 
 @get('/')
