@@ -69,5 +69,5 @@ def show_field(field, setup):
         return 'read_file({})'.format(pyquote(setup.readme))
 
     if not value:
-        return field
+        return safe_string('<span class="nocode">{}</span>'.format(field))
     return pyquote(value)

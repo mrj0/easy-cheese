@@ -11,6 +11,10 @@ SETUP_PY_TEMPLATE = 'setup_py.tpl'
 python_file_pattern = re.compile('(.*)\.(py|pyc|pyo)$', re.I)
 readme_file_pattern = re.compile('readme(\..*)?$', re.I)
 
+from trove import all_classifiers
+license_choices = [tuple([c[11:]] * 2) for c in all_classifiers
+                    if c.startswith('License :: ')]
+classifier_choices = [tuple([c] * 2) for c in all_classifiers]
 
 FIELDS = ('name', 'version', 'description', 'long_description',
           'url', 'author', 'author_email', 'readme', 'modules', 'packages',)
@@ -63,12 +67,17 @@ class Setup(form.Form):
     version = fields.TextField()
     long_description = fields.TextAreaField()
     url = fields.TextField()
+    license = fields.SelectField(choices=license_choices)
+
+    # lists
     modules = fields.TextField()
     packages = fields.TextField()
 
     def __init__(self, *args, **kwargs):
         super(Setup, self).__init__(*args, **kwargs)
         self.readme = None
+        if self.license.data == 'None':
+            self.license.data = None
 
     def as_hidden(self):
         data = self.data

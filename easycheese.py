@@ -37,7 +37,7 @@ def process_version_control():
                 previous = json.loads(request.POST.get('previous'))
                 for name, field, in setup._fields.iteritems():
                     if not field.data:
-                        field.process(None, previous.get(name))
+                        field.process_data(previous.get(name))
 
                 # not a field
                 setup.readme = previous.get('readme')
