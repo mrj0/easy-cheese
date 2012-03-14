@@ -14,11 +14,6 @@ def display_form():
     return template('form.html', data={})
 
 
-@get('/manual/')
-def display_manual():
-    return template('manual.html')
-
-
 identifiers = re.compile(r'\w+')
 
 
@@ -49,29 +44,12 @@ def update_setup(data, setup):
             setattr(setup, name, value)
 
 
-@post('/manual/')
-def process_manual():
-    setup = generator.SetupDistutils()
-    update_setup(request.POST, setup)
-
-    if not setup.is_valid():
-        return template('manual.html',
-                        errors=setup.errors,
-                        data=request.POST,
-                        )
-
-    return template('setup.html', setup=setup.generate())
-
-
 @post('/')
 def process_version_control():
     """ Handles supplied author input and returns setup.py template """
 
-    url = request.POST.get('repo_url')
-    if not url and not request.POST:
-        return redirect('/manual/')
-
     try:
+        url = request.POST.get('repo_url')
         if url:
             client = client_for_url(url)
             client.fetch()
