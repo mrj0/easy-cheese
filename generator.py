@@ -17,7 +17,7 @@ readme_file_pattern = re.compile('readme(\..*)?$', re.I)
 from trove import all_classifiers
 license_choices = \
     [('', '')] + \
-    [tuple([c[11:]] * 2) for c in all_classifiers
+    [tuple([c.split(' :: ')[-1]] * 2) for c in all_classifiers
                     if c.startswith('License :: ')]
 classifier_choices = [tuple([c] * 2) for c in all_classifiers
                     if not c.startswith('License :: ')]
@@ -83,6 +83,15 @@ class Setup(form.Form):
     def __init__(self, *args, **kwargs):
         super(Setup, self).__init__(*args, **kwargs)
         self.readme = None
+        if self.license.data == 'None':
+            self.license.data = None
+        if self.classifiers.data == 'None':
+            self.classifiers.data = None
+
+    def process(self, formdata=None, obj=None, **kwargs):
+        super(Setup, self).process(formdata=formdata, obj=obj, **kwargs)
+
+        # wtforms bugs?
         if self.license.data == 'None':
             self.license.data = None
         if self.classifiers.data == 'None':
