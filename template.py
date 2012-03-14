@@ -28,9 +28,11 @@ def is_ascii(s):
 
 # filters
 
-def pyquote(value):
-    if value is None:
-        return None
+def pyquote(field):
+    value = field.data
+    if not value:
+        return field
+
     format = '' if is_ascii(value) else 'u'
     if '\n' in value:
         return u"{format}'''{value}'''".format(

@@ -1,12 +1,11 @@
-from client import client_for_url, ClientTimeoutError
-from generator import create_setup
-from template import template
-import generator
 import simplejson as json
+from client import client_for_url, ClientTimeoutError
+from generator import create_setup, SetupDistutils
+from template import template
 
 import re
 import bottle
-from bottle import get, post, static_file, request, route, run, redirect
+from bottle import get, post, static_file, request, route, run, FormsDict
 
 
 @get('/')
@@ -25,25 +24,6 @@ def clean_packages(input):
     return re.findall(identifiers, input)
 
 
-def update_setup(data, setup):
-    """
-    copy data from 'data' dict (request.POST) to setup
-    """
-
-    previous = data.get('previous')
-    if previous:
-        previous = json.loads(previous)
-        for name in generator.FIELDS:
-            setattr(setup, name, previous.get(name))
-
-    for name in generator.FIELDS:
-        value = unicode(data.get(name, ''), "utf-8").strip()
-        if value:
-            if name in ('modules', 'packages'):
-                value = clean_packages(value)
-            setattr(setup, name, value)
-
-
 @post('/')
 def process_version_control():
     """ Handles supplied author input and returns setup.py template """
@@ -55,8 +35,18 @@ def process_version_control():
             client.fetch()
             setup = create_setup(client)
         else:
-            setup = create_setup()
-            update_setup(request.POST, setup)
+            setup = SetupDistutils(formdata=request.POST)
+            if request.POST.get('previous'):
+
+                # unfortunately calling form.process applies the json
+                # value for all fields. we don't want to overwrite any new
+                # values from request.post.
+
+                previous = json.loads(request.POST.get('previous'))
+                for name, field, in setup._fields.iteritems():
+                    if not field.data:
+                        field.process(None, previous.get(name))
+
     except ClientTimeoutError as te:
         return template('form.html', errors=[te.message], data={})
 
