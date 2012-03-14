@@ -70,7 +70,7 @@ def show_field(field, setup):
         return 'read_file({})'.format(pyquote(setup.readme))
 
     if name == 'classifiers' and value:
-        return '[\n        {}\n    ]'.format(
+        return '[\n        {},\n    ]'.format(
             ',\n        '.join([pyquote(c) for c in value]))
 
     if not value:
