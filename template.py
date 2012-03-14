@@ -68,6 +68,6 @@ def show_field(field, setup):
     if name == 'long_description' and setup.readme:
         return 'read_file({})'.format(_pyquote(setup.readme))
 
-    if value is None:
+    if not value:
         return field
     return _pyquote(value)
