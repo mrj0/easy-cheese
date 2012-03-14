@@ -2,6 +2,7 @@ from client import client_for_url, ClientTimeoutError
 from generator import create_setup
 from template import template
 import generator
+import simplejson as json
 
 import re
 import bottle
@@ -29,15 +30,29 @@ def clean_packages(input):
     return re.findall(identifiers, input)
 
 
+def update_setup(data, setup):
+    """
+    copy data from 'data' dict (request.POST) to setup
+    """
+
+    previous = data.get('previous')
+    if previous:
+        previous = json.loads(previous)
+        for name in generator.FIELDS:
+            setattr(setup, name, previous.get(name))
+
+    for name in generator.FIELDS:
+        value = unicode(data.get(name, ''), "utf-8").strip()
+        if value:
+            if name in ('modules', 'packages'):
+                value = clean_packages(value)
+            setattr(setup, name, value)
+
+
 @post('/manual/')
 def process_manual():
     setup = generator.SetupDistutils()
-    for name in ('name', 'version', 'description', 'long_description',):
-        setattr(setup, name, unicode(request.POST.get(name, ''),
-                                     "utf-8").strip())
-
-    setup.modules = clean_packages(request.POST.get('modules', ''))
-    setup.packages = clean_packages(request.POST.get('packages', ''))
+    update_setup(request.POST, setup)
 
     if not setup.is_valid():
         return template('manual.html',
@@ -52,17 +67,22 @@ def process_manual():
 def process_version_control():
     """ Handles supplied author input and returns setup.py template """
 
-    url = request.POST.get('url')
-    if not url:
+    url = request.POST.get('repo_url')
+    if not url and not request.POST:
         return redirect('/manual/')
 
     try:
-        client = client_for_url(url)
-        client.fetch()
-        setup = create_setup(client)
-        return template('setup.html', setup=setup.generate())
+        if url:
+            client = client_for_url(url)
+            client.fetch()
+            setup = create_setup(client)
+        else:
+            setup = create_setup()
+            update_setup(request.POST, setup)
     except ClientTimeoutError as te:
         return template('form.html', errors=[te.message], data={})
+
+    return template('setup.html', setup=setup)
 
 
 @route('/static/:filename#.*(\.js|\.css|\.png)#')

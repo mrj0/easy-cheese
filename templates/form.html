@@ -17,7 +17,7 @@
 
             <fieldset id="setup_required_fields">
                 <label>Git or Mercurial URL
-                    <input class="span6" id="url" name="url" type="text" value="{{ data.url }}">
+                    <input class="span6" id="repo_url" name="repo_url" type="text" value="{{ data.repo_url }}">
                     <span class="help-block">(Github or Bitbucket are the best supported)</span>
                 </label>
             </fieldset>
@@ -27,7 +27,7 @@
                     <div class="errors"><p>Please correct the above errors</p></div>
                 {% endif %}
                 <input class="btn-primary btn-large" type="submit" value="Generate">
-                <a class="pull-right" href="/manual/">Skip, manually specify</a>
+                <a id="skip" class="pull-right" href="#">Skip, manually specify</a>
             </fieldset>
         </form>
     </div>

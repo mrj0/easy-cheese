@@ -15,9 +15,13 @@
 
     <div class="row">
         <div class="span12">
-            <pre class="prettyprint">
-{{ setup }}
-            </pre>
+            <form method="post">
+                {{ setup.as_hidden()|safe }}
+                <pre class="prettyprint">
+{{ setup.generate() }}
+                </pre>
+                <input class="btn-primary btn-large" type="submit" value="Update">
+            </form>
         </div>
     </div>
 

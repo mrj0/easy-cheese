@@ -4,15 +4,17 @@ import functools
 import os
 import bottle
 import markupsafe # unused, docs say you must import
+import jinja2
 
 bottle.debug()
 bottle.TEMPLATE_PATH.append(os.path.join(os.path.dirname(__file__),
                                          'templates'))
+safe_string = jinja2.Markup
 
 class CustomJinja2Template(bottle.Jinja2Template):
     def prepare(self, filters=None, tests=None, **kwargs):
         kwargs['autoescape'] = True
-        filters = {'pyquote': pyquote}
+        filters = {'pyquote': pyquote, 'placeholder': placeholder}
         return super(CustomJinja2Template, self).prepare(filters=filters, tests=tests, **kwargs)
 
 
@@ -40,3 +42,9 @@ def pyquote(value):
         format=format,
         value=value,
     )
+
+
+def placeholder(value, name):
+    if value is not None:
+        return value
+    return safe_string('<input name="{}" type="text">'.format(jinja2.escape(name)))
