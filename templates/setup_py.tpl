@@ -9,10 +9,6 @@ def read_file(name):
                        encoding='utf-8').read()
 {% endif %}
 setup({% for field in setup %}
-    {{ field.name }}={{ field|pyquote }}, {#={{ value|pyquote|placeholder(field) }}#}
+    {{ field.name }}={{ field|show_field(setup) }},
     {%- endfor %}
-    {# {{ key }}={{ value|pyquote|placeholder(key) }},{% endfor %} #}
-{#    {% if setup.modules %}py_modules=[{{ setup.module_str }}],
-    {% endif %}{% if setup.packages %}packages=[{{ setup.package_str }}],{% endif %} #}
-{#    {% if setup.readme %}long_description=read_file({{ setup.readme|pyquote }}),{% endif %}#}
 )

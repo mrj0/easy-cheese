@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import functools
+import re
 import os
 import bottle
 import markupsafe # unused, docs say you must import
@@ -14,7 +15,7 @@ safe_string = jinja2.Markup
 class CustomJinja2Template(bottle.Jinja2Template):
     def prepare(self, filters=None, tests=None, **kwargs):
         kwargs['autoescape'] = True
-        filters = {'pyquote': pyquote, 'placeholder': placeholder}
+        filters = {'show_field': show_field}
         return super(CustomJinja2Template, self).prepare(filters=filters, tests=tests, **kwargs)
 
 
@@ -26,12 +27,21 @@ def is_ascii(s):
         return True
     return all(ord(c) < 128 for c in s)
 
-# filters
 
-def pyquote(field):
-    value = field.data
-    if not value:
-        return field
+identifiers = re.compile(r'\w+')
+
+
+def clean_identifiers(input):
+    """
+    Take a string of package input, possibly delimited by ',', and
+    return a list.
+    """
+    return re.findall(identifiers, input)
+
+
+def _pyquote(value):
+    if value is None:
+        return value
 
     format = '' if is_ascii(value) else 'u'
     if '\n' in value:
@@ -46,7 +56,18 @@ def pyquote(field):
     )
 
 
-def placeholder(value, name):
-    if value is not None:
-        return value
-    return safe_string('<input name="{}" type="text">'.format(jinja2.escape(name)))
+# filters
+
+def show_field(field, setup):
+    name = field.name
+    value = field.data
+
+    if name in ('packages', 'modules') and value:
+        return '[{}]'.format(', '.join([_pyquote(p) for p in clean_identifiers(value)]))
+
+    if name == 'long_description' and setup.readme:
+        return 'read_file({})'.format(_pyquote(setup.readme))
+
+    if value is None:
+        return field
+    return _pyquote(value)

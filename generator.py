@@ -1,5 +1,5 @@
 import os, re
-from template import template, pyquote
+from template import template
 import jinja2
 import simplejson as json
 from wtforms import form, fields
@@ -23,14 +23,16 @@ def create_setup(client=None):
     """
 
     setup = SetupDistutils()
+    data = {}
 
     if client:
-        setup.name = client.name
-        setup.author = client.author
-        setup.url = client.url
-        setup.description = client.description
+        data['name'] = client.name
+        data['author'] = client.author
+        data['url'] = client.url
+        data['description'] = client.description
 
-        setup.packages = [os.path.dirname(f) for f in client.files if '__init__.' in f]
+        packages = [os.path.dirname(f) for f in client.files if '__init__.' in f]
+        data['packages'] = ' '.join(packages)
 
         # look for files not in a package to add to py_modules in setup
         # find README.* files, first one wins
@@ -40,15 +42,16 @@ def create_setup(client=None):
             if match:
                 package = os.path.dirname(filename)
                 module = match.groups()[0]
-                if not module.endswith('setup') and package not in setup.packages:
+                if not module.endswith('setup') and package not in packages:
                     modules.append(module.replace('/', '.'))
 
             if not setup.readme:
                 match = re.match(readme_file_pattern, filename)
                 if match:
                     setup.readme = filename
-        setup.modules = ' '.join(modules)
+        data['modules'] = ' '.join(modules)
 
+    setup.process(**data)
     return setup
 
 
@@ -59,14 +62,20 @@ class Setup(form.Form):
     description = fields.TextField()
     version = fields.TextField()
     long_description = fields.TextAreaField()
-    readme = fields.TextField()
     url = fields.TextField()
     modules = fields.TextField()
     packages = fields.TextField()
 
+    def __init__(self, *args, **kwargs):
+        super(Setup, self).__init__(*args, **kwargs)
+        self.readme = None
+
     def as_hidden(self):
+        data = self.data
+        data['readme'] = self.readme
+
         return '<input name="previous" value="{}" type="hidden">'.format(
-            jinja2.escape(json.dumps(self.data)),
+            jinja2.escape(json.dumps(data)),
         )
 
 

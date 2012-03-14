@@ -17,8 +17,8 @@ class TestGenerator(unittest.TestCase):
         ]
 
         setup = create_setup(client)
-        self.assertEqual(['package'], setup.packages)
-        self.assertEqual(['modules.mod'], setup.modules)
+        self.assertEqual('package', setup.packages.data)
+        self.assertEqual('modules.mod', setup.modules.data)
 
     def test_readme(self):
         client = TestClient('http://localhost/repo')

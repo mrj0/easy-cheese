@@ -3,7 +3,6 @@ from client import client_for_url, ClientTimeoutError
 from generator import create_setup, SetupDistutils
 from template import template
 
-import re
 import bottle
 from bottle import get, post, static_file, request, route, run, FormsDict
 
@@ -11,17 +10,6 @@ from bottle import get, post, static_file, request, route, run, FormsDict
 @get('/')
 def display_form():
     return template('form.html', data={})
-
-
-identifiers = re.compile(r'\w+')
-
-
-def clean_packages(input):
-    """
-    Take a string of package input, possibly delimited by ',', and
-    return a list.
-    """
-    return re.findall(identifiers, input)
 
 
 @post('/')
@@ -46,6 +34,9 @@ def process_version_control():
                 for name, field, in setup._fields.iteritems():
                     if not field.data:
                         field.process(None, previous.get(name))
+
+                # not a field
+                setup.readme = previous.get('readme')
 
     except ClientTimeoutError as te:
         return template('form.html', errors=[te.message], data={})
