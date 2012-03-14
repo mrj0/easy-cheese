@@ -39,7 +39,7 @@ def clean_identifiers(input):
     return re.findall(identifiers, input)
 
 
-def _pyquote(value):
+def pyquote(value):
     if value is None:
         return value
 
@@ -63,11 +63,11 @@ def show_field(field, setup):
     value = field.data
 
     if name in ('packages', 'modules') and value:
-        return '[{}]'.format(', '.join([_pyquote(p) for p in clean_identifiers(value)]))
+        return '[{}]'.format(', '.join([pyquote(p) for p in clean_identifiers(value)]))
 
     if name == 'long_description' and setup.readme:
-        return 'read_file({})'.format(_pyquote(setup.readme))
+        return 'read_file({})'.format(pyquote(setup.readme))
 
     if not value:
         return field
-    return _pyquote(value)
+    return pyquote(value)

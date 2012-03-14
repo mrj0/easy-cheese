@@ -2,7 +2,7 @@
 
 import unittest
 from generator import Setup
-from template import pyquote, is_ascii, clean_identifiers, _pyquote
+from template import pyquote, is_ascii, clean_identifiers, pyquote
 
 class TestTemplates(unittest.TestCase):
     def test_clean_packages(self):
@@ -12,9 +12,9 @@ class TestTemplates(unittest.TestCase):
         self.assertEqual(['one', 'two', 'three'], clean_identifiers('one two\nthree'))
 
     def test_pyquote(self):
-        self.assertIsNone(_pyquote(None))
-        self.assertEqual(u"u'testé'", _pyquote(u'testé'))
-        self.assertEqual("''", _pyquote(''))
+        self.assertIsNone(pyquote(None))
+        self.assertEqual(u"u'testé'", pyquote(u'testé'))
+        self.assertEqual("''", pyquote(''))
 
     def test_is_ascii(self):
         self.assertTrue(is_ascii('adsf'))
