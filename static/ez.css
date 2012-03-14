@@ -4,3 +4,12 @@
 #setup_required_fields .help-block { margin-top: -10px; display: block; }
 
 pre { width: 100%; }
+
+.errors {
+    background-color: red;
+    padding: 4px;
+}
+ul.errors {
+    list-style: none;
+    margin: 0;
+}

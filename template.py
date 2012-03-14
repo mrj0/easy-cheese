@@ -20,11 +20,15 @@ template = functools.partial(bottle.template, template_adapter=CustomJinja2Templ
 
 
 def is_ascii(s):
+    if not s:
+        return True
     return all(ord(c) < 128 for c in s)
 
 # filters
 
 def pyquote(value):
+    if value is None:
+        return None
     format = '' if is_ascii(value) else 'u'
     if '\n' in value:
         return u"{format}'''{value}'''".format(

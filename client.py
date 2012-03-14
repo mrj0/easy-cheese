@@ -1,14 +1,17 @@
 #from dulwich.client import HttpGitClient
-#from dulwich.repo import Repo
+#from dulwich.name import Repo
+import os
 import requests
 import simplejson as json
 from urlparse import urlparse
-
-
-GITHUB_URL = 'https://api.github.com'
+import settings
 
 
 class ClientError(Exception):
+    pass
+
+
+class ClientTimeoutError(Exception):
     pass
 
 
@@ -27,6 +30,13 @@ def client_for_url(url):
 class SourceClient(object):
     def __init__(self, url):
         self.url = url
+        self.author = None
+        self.email = None
+        self.name = None
+        self.description = None
+        self.version = None
+        self.long_description = None
+        self.files = []
 
 
 class DummyGraphWalker(object):
@@ -42,7 +52,7 @@ def determine_git_wants(refs):
         return [refs['HEAD']]
     if 'refs/heads/master' in refs:
         return [refs['refs/heads/master']]
-    raise ClientError('The repo doesn\'t have a HEAD or master reference')
+    raise ClientError('The name doesn\'t have a HEAD or master reference')
 
 
 def pack_data(data):
@@ -51,7 +61,7 @@ def pack_data(data):
 
 
 class GitClient(SourceClient):
-    def list_files(self):
+    def fetch(self):
         # todo need to figure out what to do with a pack file
         #client = HttpGitClient(self.url)
         #client.fetch_pack('/mrj0/jep.git', determine_git_wants,
@@ -72,21 +82,50 @@ class GitHubClient(SourceClient):
         if not parts or len(parts) < 2:
             raise ValueError('Github url must include a username and repo')
 
-        self.user = parts[0]
-        self.repo = parts[1]
+        self.author = parts[0]
+        self.name = parts[1]
 
-        if self.repo.endswith('.git'):
-            self.repo = self.repo[:-4]
+        if self.name.endswith('.git'):
+            self.name = self.name[:-4]
 
-    def list_files(self):
-        request = self.session.request('GET',
-            GITHUB_URL +
-            '/repos/{}/{}/git/trees/HEAD'.format(
-                self.user,
-                self.repo,
-                ),
-            params={'recursive': '1'},
-        )
+    def fetch(self):
+        """
+        Perform remote request to get repo details
+        """
+
+        try:
+            url = settings.GITHUB_URL + '/repos/{}/{}'.format(
+                self.author,
+                self.name,
+            )
+
+            request = self.session.request(
+                'get',
+                url,
+                timeout=settings.SOURCE_TIMEOUT,
+            )
+        except requests.Timeout:
+            raise ClientTimeoutError('Timeout while reading from Github\'s repo API')
+
+        request.raise_for_status()
+        repo = json.loads(request.content)
+        self.url = repo['homepage']
+        self.description = repo['description']
+
+        try:
+            url = settings.GITHUB_URL + '/repos/{}/{}/git/trees/HEAD'.format(
+                self.author,
+                self.name,
+            )
+
+            request = self.session.request(
+                'get',
+                url,
+                params={'recursive': '1'},
+                timeout=settings.SOURCE_TIMEOUT,
+            )
+        except requests.Timeout:
+            raise ClientTimeoutError('Timeout while reading from Github\'s git API')
 
         request.raise_for_status()
         trees = [json.loads(request.content)]
@@ -104,6 +143,7 @@ class GitHubClient(SourceClient):
             if 'tree' in obj:
                 trees.append(obj['tree'])
             i += 1
+        self.files = files
         return files
 
 

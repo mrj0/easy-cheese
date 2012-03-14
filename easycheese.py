@@ -1,3 +1,5 @@
+from client import client_for_url, ClientTimeoutError
+from generator import create_setup
 from template import template
 import generator
 
@@ -48,12 +50,19 @@ def process_manual():
 
 @post('/')
 def process_version_control():
-    """ Handles supplied user input and returns setup.py template """
+    """ Handles supplied author input and returns setup.py template """
 
-    if not request.POST.get('url'):
+    url = request.POST.get('url')
+    if not url:
         return redirect('/manual/')
 
-    return template('setup.html')
+    try:
+        client = client_for_url(url)
+        client.fetch()
+        setup = create_setup(client)
+        return template('setup.html', setup=setup.generate())
+    except ClientTimeoutError as te:
+        return template('form.html', errors=[te.message], data={})
 
 
 @route('/static/:filename#.*(\.js|\.css|\.png)#')

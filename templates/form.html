@@ -7,9 +7,17 @@
         <h1>ez-cheese</h1>
         <h2>setup.py generator</h2>
         <form id="form_setupdotpy" method="post" class="form-vertical" action="/">
+            {% if errors %}
+            <ul class="errors">
+                {% for error in errors %}
+                <li>Error: {{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
             <fieldset id="setup_required_fields">
                 <label>Git or Mercurial URL
-                    <input class="span6" id="version_control" name="version_control" type="text" value="{{ data.version_control }}">
+                    <input class="span6" id="url" name="url" type="text" value="{{ data.url }}">
                     <span class="help-block">(Github or Bitbucket are the best supported)</span>
                 </label>
             </fieldset>
@@ -19,7 +27,7 @@
                     <div class="errors"><p>Please correct the above errors</p></div>
                 {% endif %}
                 <input class="btn-primary btn-large" type="submit" value="Generate">
-                <a href="/manual/">Skip, manually specify</a>
+                <a class="pull-right" href="/manual/">Skip, manually specify</a>
             </fieldset>
         </form>
     </div>
