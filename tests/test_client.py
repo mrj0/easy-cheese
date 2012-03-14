@@ -12,6 +12,27 @@ class TestClient(unittest.TestCase):
         c = client_for_url('ssh://hg@bitbucket.org/richardjones/python-sword2')
         self.assertIsInstance(c, HgClient)
 
+        c = client_for_url('https://mrj0@github.com/mrj0/jep.git')
+        self.assertIsInstance(c, GitHubClient)
+        c = client_for_url('git@github.com:mrj0/jep.git')
+        self.assertIsInstance(c, GitHubClient)
+
+    def test_github_client_git(self):
+        c = client_for_url('git@github.com:mrj0/jep.git')
+        self.assertIsInstance(c, GitHubClient)
+        self.assertEqual('mrj0', c.author)
+
+        self.assertRaises(ValueError, client_for_url, 'git@github.com:mrj0')
+        self.assertRaises(ValueError, client_for_url, 'git@github.com:mrj0/')
+
+    def test_github_client_https(self):
+        c = client_for_url('https://mrj0@github.com/mrj0/jep.git')
+        self.assertIsInstance(c, GitHubClient)
+        self.assertEqual('mrj0', c.author)
+
+        self.assertRaises(ValueError, client_for_url, 'https://mrj0@github.com/mrj0/')
+
+
 #    def test_list_files(self):
 #        client = client_for_url('http://github.com/mrj0/jep.git')
 #        self.assertIsInstance(client, GitHubClient)

@@ -1,6 +1,3 @@
-#from dulwich.client import HttpGitClient
-#from dulwich.name import Repo
-import os
 import requests
 import simplejson as json
 from urlparse import urlparse
@@ -75,18 +72,38 @@ class GitHubClient(SourceClient):
         self.session = requests.session()
         self.session.headers.update({'Accept': 'application/json'})
 
-        path = urlparse(self.url).path
-        if not path:
-            raise ValueError('Invalid path')
-        parts = path.lstrip('/').split('/')
-        if not parts or len(parts) < 2:
-            raise ValueError('Github url must include a username and repo')
+        if '://' in self.url:
+            # handle urls with schemes
 
-        self.author = parts[0]
-        self.name = parts[1]
+            path = urlparse(self.url).path
+            if not path:
+                raise ValueError('Invalid path')
+            parts = path.lstrip('/').split('/')
+            if not parts or len(parts) < 2:
+                raise ValueError('Github url must include a username and repo')
+
+            self.author = parts[0]
+            self.name = parts[1]
+        else:
+            # no scheme, this breaks urlparse
+
+            parts = self.url.split(':')[-1]
+            if not parts or '/' not in parts:
+                raise ValueError('Github url must include a username and repo')
+
+            parts = parts.split('/')
+            if len(parts) < 2:
+                raise ValueError('Github url must include a username and repo')
+
+            self.author = parts[0]
+            self.name = parts[1]
 
         if self.name.endswith('.git'):
             self.name = self.name[:-4]
+
+        if not self.name or not self.author:
+            raise ValueError('Error parsing URL. Ensure the URL contains the'
+                             'username and repo on Github.')
 
     def fetch(self):
         """
