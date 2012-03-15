@@ -29,7 +29,7 @@ def process_version_control():
     try:
         url = request.POST.get('repo_url')
         if url:
-            client = client_for_url(url)
+            client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
         else:

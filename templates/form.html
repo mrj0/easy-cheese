@@ -6,7 +6,7 @@
     <div class="span6 offset3">
         <h1>ez-cheese</h1>
         <h2>setup.py generator</h2>
-        <form id="form_setupdotpy" method="post" class="form-vertical" action="/">
+        <form id="form_setupdotpy" method="post" class="form-vertical" action="/" autocomplete="on">
             {% if errors %}
             <ul class="errors">
                 {% for error in errors %}
@@ -16,9 +16,14 @@
             {% endif %}
 
             <fieldset id="setup_required_fields">
-                <label>Git or Mercurial URL
+                <label>Public source code URL
                     <input class="span6" id="repo_url" name="repo_url" type="text" value="{{ data.repo_url }}">
-                    <span class="help-block">(Github or Bitbucket are the best supported)</span>
+                </label>
+                <label>URL type
+                    <select class="span6" id="repo_type" name="repo_type" type="text" value="{{ data.repo_type }}">
+                        <option value="git">Git</option>
+                        <option value="hg">Mercurial</option>
+                    </select>
                 </label>
             </fieldset>
 
@@ -27,7 +32,7 @@
                     <div class="errors"><p>Please correct the above errors</p></div>
                 {% endif %}
                 <input class="btn-primary btn-large" type="submit" value="Generate">
-                <a id="skip" class="pull-right" href="/manual/">Skip, manually specify</a>
+                <a id="skip" class="pull-right" href="/manual/">Skip, manually specify options</a>
             </fieldset>
         </form>
     </div>

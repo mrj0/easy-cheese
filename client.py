@@ -1,7 +1,15 @@
+import shutil
+import tempfile
+import os
 import requests
 import simplejson as json
 from urlparse import urlparse
 import settings
+import subprocess
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 class ClientError(Exception):
@@ -12,7 +20,15 @@ class ClientTimeoutError(Exception):
     pass
 
 
-def client_for_url(url):
+def client_for_url(url, repo_type=None):
+    if repo_type == 'git':
+        if 'github.com' in url:
+            return GitHubClient(url)
+        return GitClient(url)
+    if repo_type == 'hg':
+        if 'bitbucket.org' in url:
+            return BitbucketClient(url)
+        return MercurialClient(url)
     if 'github.com' in url:
         return GitHubClient(url)
     if url.startswith('git://') or 'github' in url or url.endswith('.git'):
@@ -22,6 +38,18 @@ def client_for_url(url):
         or 'hg.' in url:
         return HgClient(url)
     raise ValueError('Unsupported url format')
+
+
+class TemporaryDirectory(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        shutil.rmtree(self.name)
 
 
 class SourceClient(object):
@@ -34,6 +62,12 @@ class SourceClient(object):
         self.version = None
         self.long_description = None
         self.files = []
+
+    def _temp_directory(self):
+        tmp = settings.SOURCE_TEMP
+        if not os.path.exists(tmp):
+            os.mkdir(tmp, mode=0700)
+        return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
 
 
 class DummyGraphWalker(object):
@@ -57,13 +91,46 @@ def pack_data(data):
     pass
 
 
+class MercurialClient(SourceClient):
+    pass
+
+
+class BitbucketClient(MercurialClient):
+    pass
+
+
 class GitClient(SourceClient):
+
+    def __init__(self, url):
+        super(GitClient, self).__init__(url)
+
+        if not settings.DEBUG:
+            if self.url.startswith('/'):
+                raise ClientError('File urls not allowed')
+
     def fetch(self):
-        # todo need to figure out what to do with a pack file
-        #client = HttpGitClient(self.url)
-        #client.fetch_pack('/mrj0/jep.git', determine_git_wants,
-        # DummyGraphWalker(), pack_data)
-        return []
+        with self._temp_directory() as tmpdir:
+
+            out_dir = os.path.join(tmpdir.name, 'git')
+            try:
+                subprocess.check_call([
+                    'git',
+                    'clone',
+                    '--depth',
+                    '1',
+                    str(self.url),
+                    out_dir,
+                ])
+            except subprocess.CalledProcessError:
+                log.exception('Failed to clone git repo')
+
+            for root, dirs, files in os.walk(out_dir):
+                if '.git' in dirs:
+                    dirs.remove('.git')
+
+                for file in files:
+                    self.files.append(os.path.join(root, file).replace(
+                        out_dir, '', 1).lstrip('/'))
 
 
 class GitHubClient(SourceClient):
@@ -161,7 +228,6 @@ class GitHubClient(SourceClient):
                 trees.append(obj['tree'])
             i += 1
         self.files = files
-        return files
 
 
 class HgClient(SourceClient):
