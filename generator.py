@@ -1,4 +1,5 @@
-import os, re
+import os
+import re
 from template import template
 import jinja2
 import simplejson as json
@@ -39,7 +40,8 @@ def create_setup(client=None):
     modules = []
 
     if client:
-        packages = [os.path.dirname(f) for f in client.files if '__init__.' in f]
+        packages = [os.path.dirname(f)
+                    for f in client.files if '__init__.' in f]
 
         # look for files not in a package to add to py_modules in setup
         # find README.* files, first one wins

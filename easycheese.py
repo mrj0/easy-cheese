@@ -19,6 +19,7 @@ def display_form():
 def manual():
     return template('setup.html', setup=SetupDistutils())
 
+
 @post('/')
 def process_version_control():
     """ Handles supplied author input and returns setup.py template """

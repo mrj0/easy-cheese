@@ -4,7 +4,7 @@ import functools
 import re
 import os
 import bottle
-import markupsafe # unused, docs say you must import
+import markupsafe  # unused, docs say you must import
 import jinja2
 
 bottle.debug()
@@ -12,14 +12,17 @@ bottle.TEMPLATE_PATH.append(os.path.join(os.path.dirname(__file__),
                                          'templates'))
 safe_string = jinja2.Markup
 
+
 class CustomJinja2Template(bottle.Jinja2Template):
     def prepare(self, filters=None, tests=None, **kwargs):
         kwargs['autoescape'] = True
         filters = {'show_field': show_field}
-        return super(CustomJinja2Template, self).prepare(filters=filters, tests=tests, **kwargs)
+        return super(CustomJinja2Template, self).prepare(
+            filters=filters, tests=tests, **kwargs)
 
 
-template = functools.partial(bottle.template, template_adapter=CustomJinja2Template)
+template = functools.partial(bottle.template,
+                             template_adapter=CustomJinja2Template)
 
 
 def is_ascii(s):

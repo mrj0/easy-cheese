@@ -223,7 +223,8 @@ class BitbucketClient(MercurialClient):
                 timeout=settings.API_TIMEOUT,
             )
         except requests.Timeout:
-            raise ClientTimeoutError('Timeout while reading from Bitbuckets\'s repo API')
+            raise ClientTimeoutError('Timeout while reading from '
+                                     'Bitbuckets\'s repo API')
 
         request.raise_for_status()
         repo = json.loads(request.content)
@@ -331,7 +332,8 @@ class GitHubClient(SourceClient):
                 timeout=settings.API_TIMEOUT,
             )
         except requests.Timeout:
-            raise ClientTimeoutError('Timeout while reading from Github\'s repo API')
+            raise ClientTimeoutError('Timeout while reading from '
+                                     'Github\'s repo API')
 
         request.raise_for_status()
         repo = json.loads(request.content)
@@ -351,7 +353,8 @@ class GitHubClient(SourceClient):
                 timeout=settings.API_TIMEOUT,
             )
         except requests.Timeout:
-            raise ClientTimeoutError('Timeout while reading from Github\'s git API')
+            raise ClientTimeoutError('Timeout while reading from '
+                                     'Github\'s git API')
 
         request.raise_for_status()
         trees = [json.loads(request.content)]
