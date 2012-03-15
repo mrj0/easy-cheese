@@ -17,7 +17,7 @@ class TestCache(unittest.TestCase):
 
         source_client = TestClient(TEST_URL)
         source_client.files = ['one.py', 'two.py']
-        source_client.discovered = { 'name': 'some_project' }
+        source_client.discovered = {'name': 'some_project'}
         source_client.cache()
 
         cached = cache.get(TEST_URL)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from generator import Setup
-from template import pyquote, is_ascii, clean_identifiers, pyquote
+from template import is_ascii, clean_identifiers, pyquote
+
 
 class TestTemplates(unittest.TestCase):
     def test_clean_packages(self):

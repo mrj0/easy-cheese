@@ -30,12 +30,14 @@ def process_version_control():
     client = None
     setup = None
 
+    # check cache
     if not client and url:
         cached = cache.get(url)
         if cached:
             client = CachedClient(url, cached)
             setup = create_setup(client)
 
+    # attempt to build from version control url
     if not client and url:
         try:
             client = client_for_url(url, request.POST.get('repo_type'))
@@ -44,6 +46,7 @@ def process_version_control():
         except ClientTimeoutError as te:
             return template('form.html', errors=[te.message], data={})
 
+    # allow manual input
     if not client:
         setup = SetupDistutils(formdata=request.POST)
         if request.POST.get('previous'):

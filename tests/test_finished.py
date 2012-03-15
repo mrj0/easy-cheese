@@ -23,7 +23,8 @@ class TestFinished(unittest.TestCase):
         )).unescape()
 
         sys.argv = ['setup.py', 'check']
-        distutils.core._setup_stop_after = "init" # stops command execution
+        # stops command execution
+        distutils.core._setup_stop_after = "init"
         dist = None
         exec src
 
