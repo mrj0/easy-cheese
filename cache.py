@@ -10,5 +10,5 @@ def get(key):
     return _client.get(key)
 
 
-def set(key, value):
-    return _client.set(key, value)
+def set(key, value, time=7200):
+    return _client.set(key, value, time=time)

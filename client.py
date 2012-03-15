@@ -5,6 +5,7 @@ import os
 import requests
 import simplejson as json
 from urlparse import urlparse
+import cache
 import settings
 import subprocess
 import logging
@@ -141,7 +142,8 @@ class Command(object):
 
 
 class SourceClient(object):
-    def __init__(self, url):
+    def __init__(self, url, from_cache=False):
+        self.from_cache = from_cache
         self.url = url
         self.files = []
         self.discovered = {}
@@ -153,6 +155,13 @@ class SourceClient(object):
         if not os.path.exists(tmp):
             os.mkdir(tmp, mode=0700)
         return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
+
+    def cache(self):
+        if not self.from_cache:
+            cache.set(self.url, {
+                'files': self.files,
+                'discovered': self.discovered,
+            })
 
 
 class MercurialClient(SourceClient):
@@ -377,3 +386,15 @@ class GitHubClient(SourceClient):
 
 class HgClient(SourceClient):
     pass
+
+
+class CachedClient(SourceClient):
+
+    def __init__(self, url, cached):
+        super(CachedClient, self).__init__(url, from_cache=True)
+
+        self.files = cached.get('files', [])
+        self.discovered = cached.get('discovered', {})
+
+    def fetch(self):
+        pass

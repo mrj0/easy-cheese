@@ -1,5 +1,6 @@
 import simplejson as json
-from client import client_for_url, ClientTimeoutError
+import cache
+from client import client_for_url, ClientTimeoutError, CachedClient
 from generator import create_setup, SetupDistutils
 from template import template
 
@@ -24,34 +25,47 @@ def manual():
 def process_version_control():
     """ Handles supplied author input and returns setup.py template """
 
-    try:
-        url = request.POST.get('repo_url')
-        if url:
+    url = request.POST.get('repo_url')
+
+    client = None
+    setup = None
+
+    if not client and url:
+        cached = cache.get(url)
+        if cached:
+            client = CachedClient(url, cached)
+            setup = create_setup(client)
+
+    if not client and url:
+        try:
             client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
-        else:
-            setup = SetupDistutils(formdata=request.POST)
-            if request.POST.get('previous'):
+        except ClientTimeoutError as te:
+            return template('form.html', errors=[te.message], data={})
 
-                # unfortunately calling form.process applies the json
-                # value for all fields. we don't want to overwrite any new
-                # values from request.post.
+    if not client:
+        setup = SetupDistutils(formdata=request.POST)
+        if request.POST.get('previous'):
 
-                previous = json.loads(request.POST.get('previous'))
-                for name, field, in setup._fields.iteritems():
-                    if not field.data:
-                        field.process_data(previous.get(name))
+            # unfortunately calling form.process applies the json
+            # value for all fields. we don't want to overwrite any new
+            # values from request.post.
 
-                # not a field
-                setup.readme = previous.get('readme')
+            previous = json.loads(request.POST.get('previous'))
+            for name, field, in setup._fields.iteritems():
+                if not field.data:
+                    field.process_data(previous.get(name))
 
-                # license field is a bit strange
-                if setup.license.data == 'None':
-                    setup.license.data = None
+            # not a field
+            setup.readme = previous.get('readme')
 
-    except ClientTimeoutError as te:
-        return template('form.html', errors=[te.message], data={})
+            # license field is a bit strange
+            if setup.license.data == 'None':
+                setup.license.data = None
+
+    if client:
+        client.cache()
 
     return template('setup.html', setup=setup)
 
