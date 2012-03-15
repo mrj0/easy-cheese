@@ -64,7 +64,7 @@ def show_field(field, setup):
 
     if name in ('packages', 'modules') and value:
         return '[{}]'.format(
-            ', '.join([pyquote(p) for p in clean_identifiers(value)]))
+            ', '.join([pyquote(p) for p in value.split()]))
 
     if name == 'long_description' and setup.readme:
         return 'read_file({})'.format(pyquote(setup.readme))
