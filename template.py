@@ -61,11 +61,11 @@ def pyquote(value):
 
 # filters
 
-def show_field(field, setup):
+def show_field(field, setup, executable):
     name = field.name
     value = field.data
 
-    if name in ('packages', 'modules') and value:
+    if name in ('packages', 'py_modules') and value:
         if isinstance(value, list):
             return '[{}]'.format(', '.join([pyquote(p) for p in value]))
 
@@ -79,6 +79,6 @@ def show_field(field, setup):
         return '[\n        {},\n    ]'.format(
             ',\n        '.join([pyquote(c) for c in value]))
 
-    if not value:
+    if not value and not executable:
         return safe_string('<span class="nocode">{}</span>'.format(field))
     return pyquote(value)

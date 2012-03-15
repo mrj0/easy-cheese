@@ -23,9 +23,6 @@ license_choices = \
 classifier_choices = [tuple([c] * 2) for c in all_classifiers
                     if not c.startswith('License :: ')]
 
-FIELDS = ('name', 'version', 'description', 'long_description',
-          'url', 'author', 'author_email', 'readme', 'modules', 'packages',)
-
 
 def create_setup(client=None):
     """
@@ -34,7 +31,6 @@ def create_setup(client=None):
     """
 
     setup = SetupDistutils()
-    data = {}
 
     packages = []
     modules = []
@@ -60,7 +56,7 @@ def create_setup(client=None):
                     setup.readme = filename
 
     setup.process(None, **client.discovered)
-    setup.modules.data = modules
+    setup.py_modules.data = modules
     setup.packages.data = packages
     return setup
 
@@ -77,7 +73,7 @@ class Setup(form.Form):
     classifiers = fields.SelectMultipleField(choices=classifier_choices)
 
     # lists
-    modules = fields.TextField()
+    py_modules = fields.TextField()
     packages = fields.TextField()
 
     def __init__(self, *args, **kwargs):
@@ -107,9 +103,13 @@ class Setup(form.Form):
 
 
 class SetupDistutils(Setup):
-    def generate(self):
+
+    def generate(self, executable=False, under_test=False):
         try:
-            return safe_string(template(SETUP_PY_TEMPLATE, setup=self))
+            return safe_string(template(SETUP_PY_TEMPLATE,
+                                        setup=self,
+                                        executable=executable,
+                                        under_test=under_test))
         except Exception:
             log.exception('Failed to generate setup.py')
             return 'Error generating setup.py'

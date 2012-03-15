@@ -13,12 +13,12 @@ class TestGenerator(unittest.TestCase):
         client.files = [
             'package/one.py',
             'package/__init__.py',
-            'modules/mod.py',
+            'py_modules/mod.py',
         ]
 
         setup = create_setup(client)
         self.assertEqual(['package'], setup.packages.data)
-        self.assertEqual(['modules.mod'], setup.modules.data)
+        self.assertEqual(['py_modules.mod'], setup.py_modules.data)
 
     def test_readme(self):
         client = TestClient('http://localhost/repo')
