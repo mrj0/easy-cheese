@@ -39,13 +39,7 @@ def create_setup(client=None):
     modules = []
 
     if client:
-        data['name'] = client.name
-        data['author'] = client.author
-        data['url'] = client.url
-        data['description'] = client.description
-
         packages = [os.path.dirname(f) for f in client.files if '__init__.' in f]
-        data['packages'] = ' '.join(packages)
 
         # look for files not in a package to add to py_modules in setup
         # find README.* files, first one wins
@@ -63,7 +57,7 @@ def create_setup(client=None):
                 if match:
                     setup.readme = filename
 
-    setup.process(**data)
+    setup.process(None, **client.discovered)
     setup.modules.data = modules
     setup.packages.data = packages
     return setup

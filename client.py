@@ -53,26 +53,6 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.name)
 
 
-class SourceClient(object):
-    def __init__(self, url):
-        self.url = url
-        self.author = None
-        self.email = None
-        self.name = None
-        self.description = None
-        self.version = None
-        self.long_description = None
-        self.files = []
-
-        log.info('%s with client URL "%s"', type(self), self.url)
-
-    def _temp_directory(self):
-        tmp = settings.SOURCE_TEMP
-        if not os.path.exists(tmp):
-            os.mkdir(tmp, mode=0700)
-        return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
-
-
 class DummyGraphWalker(object):
     def ack(self, sha):
         pass
@@ -160,6 +140,21 @@ class Command(object):
         return self.communicate
 
 
+class SourceClient(object):
+    def __init__(self, url):
+        self.url = url
+        self.files = []
+        self.discovered = {}
+
+        log.info('%s with client URL "%s"', type(self), self.url)
+
+    def _temp_directory(self):
+        tmp = settings.SOURCE_TEMP
+        if not os.path.exists(tmp):
+            os.mkdir(tmp, mode=0700)
+        return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
+
+
 class MercurialClient(SourceClient):
 
     def __init__(self, url):
@@ -193,7 +188,54 @@ class MercurialClient(SourceClient):
 
 
 class BitbucketClient(MercurialClient):
-    pass
+    def __init__(self, url):
+        super(BitbucketClient, self).__init__(url)
+        self.session = requests.session()
+        self.session.headers.update({'Accept': 'application/json'})
+
+        path = urlparse(self.url).path
+        if not path:
+            raise ValueError('Invalid path')
+        parts = path.lstrip('/').split('/')
+        if not parts or len(parts) < 2:
+            raise ValueError('Bitbucket url must include a username and repo')
+
+        self.author = parts[0]
+        self.name = parts[1]
+
+        if not self.name or not self.author:
+            raise ValueError('Error parsing URL. Ensure the URL contains the'
+                             'username and repo on Bitbucket.')
+
+        self.discovered['author'] = self.author
+        self.discovered['name'] = self.name
+
+    def fetch(self):
+        try:
+            url = settings.BITBUCKET_URL + '/repositories/{}/{}'.format(
+                self.author,
+                self.name,
+            )
+
+            request = self.session.request(
+                'get',
+                url,
+                timeout=settings.API_TIMEOUT,
+            )
+        except requests.Timeout:
+            raise ClientTimeoutError('Timeout while reading from Bitbuckets\'s repo API')
+
+        request.raise_for_status()
+        repo = json.loads(request.content)
+
+        self.discovered['description'] = repo['description']
+        self.discovered['url'] = repo['website']
+
+        if 'fork_of' in repo:
+            self.discovered['description'] = repo['fork_of']['description']
+            self.discovered['url'] = repo['fork_of']['website']
+
+        super(BitbucketClient, self).fetch()
 
 
 class GitClient(SourceClient):
@@ -269,6 +311,9 @@ class GitHubClient(SourceClient):
             raise ValueError('Error parsing URL. Ensure the URL contains the'
                              'username and repo on Github.')
 
+        self.discovered['author'] = self.author
+        self.discovered['name'] = self.name
+
     def fetch(self):
         """
         Perform remote request to get repo details
@@ -283,15 +328,15 @@ class GitHubClient(SourceClient):
             request = self.session.request(
                 'get',
                 url,
-                timeout=settings.SOURCE_TIMEOUT,
+                timeout=settings.API_TIMEOUT,
             )
         except requests.Timeout:
             raise ClientTimeoutError('Timeout while reading from Github\'s repo API')
 
         request.raise_for_status()
         repo = json.loads(request.content)
-        self.url = repo['homepage']
-        self.description = repo['description']
+        self.discovered['url'] = repo['homepage']
+        self.discovered['description'] = repo['description']
 
         try:
             url = settings.GITHUB_URL + '/repos/{}/{}/git/trees/HEAD'.format(
@@ -303,7 +348,7 @@ class GitHubClient(SourceClient):
                 'get',
                 url,
                 params={'recursive': '1'},
-                timeout=settings.SOURCE_TIMEOUT,
+                timeout=settings.API_TIMEOUT,
             )
         except requests.Timeout:
             raise ClientTimeoutError('Timeout while reading from Github\'s git API')

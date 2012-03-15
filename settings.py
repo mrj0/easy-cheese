@@ -13,6 +13,8 @@ GIT_BIN = '/usr/local/bin/git'
 
 GITHUB_URL = 'https://api.github.com'
 
+BITBUCKET_URL = 'https://api.bitbucket.org/1.0'
+
 # how long to wait for a clone
 CLONE_TIMEOUT = 30
 
@@ -22,7 +24,7 @@ MEMCACHED_PORT = 11211
 SOURCE_TEMP = '/tmp/ez'
 
 # timeout to fetch repos
-SOURCE_TIMEOUT = 30
+API_TIMEOUT = 30
 
 try:
     from local_settings import *
