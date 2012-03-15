@@ -48,6 +48,10 @@ def process_version_control():
                 # not a field
                 setup.readme = previous.get('readme')
 
+                # license field is a bit strange
+                if setup.license.data == 'None':
+                    setup.license.data = None
+
     except ClientTimeoutError as te:
         return template('form.html', errors=[te.message], data={})
 
