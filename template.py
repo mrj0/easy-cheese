@@ -63,8 +63,11 @@ def show_field(field, setup):
     value = field.data
 
     if name in ('packages', 'modules') and value:
+        if isinstance(value, list):
+            return '[{}]'.format(', '.join([pyquote(p) for p in value]))
+
         return '[{}]'.format(
-            ', '.join([pyquote(p) for p in value.split()]))
+            ', '.join([pyquote(p) for p in clean_identifiers(value)]))
 
     if name == 'long_description' and setup.readme:
         return 'read_file({})'.format(pyquote(setup.readme))

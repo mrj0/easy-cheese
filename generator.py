@@ -35,6 +35,9 @@ def create_setup(client=None):
     setup = SetupDistutils()
     data = {}
 
+    packages = []
+    modules = []
+
     if client:
         data['name'] = client.name
         data['author'] = client.author
@@ -59,9 +62,10 @@ def create_setup(client=None):
                 match = re.match(readme_file_pattern, filename)
                 if match:
                     setup.readme = filename
-        data['modules'] = ' '.join(modules)
 
     setup.process(**data)
+    setup.modules.data = modules
+    setup.packages.data = packages
     return setup
 
 
