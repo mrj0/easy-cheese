@@ -21,8 +21,6 @@ class TestFinished(unittest.TestCase):
             executable=True,
             under_test=True,
         )).unescape()
-        src = '\n'.join([line for line in src.split('\n')
-                            if not line.startswith('#')])
 
         sys.argv = ['setup.py', 'check']
         distutils.core._setup_stop_after = "init" # stops command execution

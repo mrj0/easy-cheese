@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+{% if not under_test %}# -*- coding: utf-8 -*-{% endif %}
 
 from distutils.core import setup
 {% if setup.readme %}
