@@ -1,5 +1,5 @@
 import unittest
-from client import client_for_url, GitClient, HgClient, GitHubClient
+from client import client_for_url, GitClient, HgClient, GitHubClient, Command, CommandTimeoutException
 
 
 class TestClient(unittest.TestCase):
@@ -31,6 +31,13 @@ class TestClient(unittest.TestCase):
         self.assertEqual('mrj0', c.author)
 
         self.assertRaises(ValueError, client_for_url, 'https://mrj0@github.com/mrj0/')
+
+    def test_command(self):
+        with Command('echo hello', shell=True) as cmd:
+            self.assertEqual('hello', cmd.run()[0].strip())
+
+        with Command(['sleep', '100000'], timeout=.1) as cmd:
+            self.assertRaises(CommandTimeoutException, cmd.run)
 
 
 #    def test_list_files(self):
