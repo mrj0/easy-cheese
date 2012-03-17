@@ -36,13 +36,12 @@ def client_for_url(url, repo_type=None):
     if 'github.com' in url:
         return GitHubClient(url)
 
+    if 'bitbucket.org' in url:
+        return BitbucketClient(url)
+    
     if url.startswith('git://') or url.endswith('.git'):
         return GitClient(url)
 
-    if 'bitbucket.org' in url \
-        or 'hg@' in url \
-        or 'hg.' in url:
-        return HgClient(url)
     raise ValueError('Unsupported url format')
 
 
@@ -101,6 +100,8 @@ class Command(object):
                 self.communicate = self.process.communicate()
             except Exception:
                 log.exception('thread exception')
+
+        self.communicate = ()
 
         self.thread = threading.Thread(target=target)
         self.thread.start()

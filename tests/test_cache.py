@@ -24,7 +24,6 @@ class TestCache(unittest.TestCase):
         self.assertIsNotNone(cached)
 
         client = CachedClient(TEST_URL, cached)
-        self.assertTrue(client.from_cache)
         self.assertEqual(['one.py', 'two.py'], client.files)
         self.assertEqual({'name': 'some_project'}, client.discovered)
 
