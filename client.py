@@ -27,14 +27,18 @@ def client_for_url(url, repo_type=None):
         if 'github.com' in url:
             return GitHubClient(url)
         return GitClient(url)
+
     if repo_type == 'hg':
         if 'bitbucket.org' in url:
             return BitbucketClient(url)
         return MercurialClient(url)
+
     if 'github.com' in url:
         return GitHubClient(url)
-    if url.startswith('git://') or 'github' in url or url.endswith('.git'):
+
+    if url.startswith('git://') or url.endswith('.git'):
         return GitClient(url)
+
     if 'bitbucket.org' in url \
         or 'hg@' in url \
         or 'hg.' in url:

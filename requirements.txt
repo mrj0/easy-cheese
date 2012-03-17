@@ -1,0 +1,8 @@
+Jinja2==2.6
+MarkupSafe==0.15
+WTForms==1.0.1
+bottle==0.10.9
+pylibmc==1.2.2
+requests==0.10.8
+simplejson==2.4.0
+wsgiref==0.1.2
