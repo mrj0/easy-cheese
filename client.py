@@ -58,27 +58,6 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.name)
 
 
-class DummyGraphWalker(object):
-    def ack(self, sha):
-        pass
-
-    def next(self):
-        pass
-
-
-def determine_git_wants(refs):
-    if 'HEAD' in refs:
-        return [refs['HEAD']]
-    if 'refs/heads/master' in refs:
-        return [refs['refs/heads/master']]
-    raise ClientError('The name doesn\'t have a HEAD or master reference')
-
-
-def pack_data(data):
-    print 'got some data'
-    pass
-
-
 class CommandException(Exception):
     pass
 
@@ -146,8 +125,7 @@ class Command(object):
 
 
 class SourceClient(object):
-    def __init__(self, url, from_cache=False):
-        self.from_cache = from_cache
+    def __init__(self, url):
         self.url = url
         self.files = []
         self.discovered = {}
@@ -161,11 +139,10 @@ class SourceClient(object):
         return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
 
     def cache(self):
-        if not self.from_cache:
-            cache.set(self.url, {
-                'files': self.files,
-                'discovered': self.discovered,
-            })
+        cache.set(self.url, {
+            'files': self.files,
+            'discovered': self.discovered,
+        })
 
 
 class MercurialClient(SourceClient):
@@ -388,17 +365,16 @@ class GitHubClient(SourceClient):
         self.files = files
 
 
-class HgClient(SourceClient):
-    pass
-
-
 class CachedClient(SourceClient):
 
     def __init__(self, url, cached):
-        super(CachedClient, self).__init__(url, from_cache=True)
+        super(CachedClient, self).__init__(url)
 
         self.files = cached.get('files', [])
         self.discovered = cached.get('discovered', {})
 
     def fetch(self):
+        pass
+
+    def cache(self):
         pass
