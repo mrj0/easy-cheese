@@ -18,7 +18,7 @@ class ClientError(Exception):
     pass
 
 
-class ClientTimeoutError(Exception):
+class ClientTimeoutError(ClientError):
     pass
 
 
@@ -38,7 +38,7 @@ def client_for_url(url, repo_type=None):
 
     if 'bitbucket.org' in url:
         return BitbucketClient(url)
-    
+
     if url.startswith('git://') or url.endswith('.git'):
         return GitClient(url)
 

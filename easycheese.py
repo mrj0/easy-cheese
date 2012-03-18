@@ -1,6 +1,6 @@
 import simplejson as json
 import cache
-from client import client_for_url, ClientTimeoutError, CachedClient
+from client import client_for_url, ClientError, CachedClient
 from generator import create_setup, SetupDistutils
 from template import template
 
@@ -43,8 +43,13 @@ def process_version_control():
             client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
-        except ClientTimeoutError as te:
-            return template('form.html', errors=[te.message], data={})
+        except ClientError as te:
+            log.exception('ignored')
+
+            # failed to get a list of files in repo, but ensure that
+            # we can continue manually
+
+            client = None
 
     # allow manual input
     if not client:
