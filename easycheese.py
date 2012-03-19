@@ -43,7 +43,7 @@ def process_version_control():
             client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
-        except ClientError as te:
+        except (ClientError, IOError):
             log.exception('ignored')
 
             # failed to get a list of files in repo, but ensure that

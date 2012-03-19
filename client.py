@@ -3,6 +3,7 @@ import tempfile
 import threading
 import os
 import requests
+from requests.exceptions import RequestException
 import simplejson as json
 from urlparse import urlparse
 import cache
@@ -208,7 +209,7 @@ class BitbucketClient(MercurialClient):
                 self.name,
             )
 
-            request = self.session.request(
+            response = self.session.request(
                 'get',
                 url,
                 timeout=settings.API_TIMEOUT,
@@ -217,8 +218,10 @@ class BitbucketClient(MercurialClient):
             raise ClientTimeoutError('Timeout while reading from '
                                      'Bitbuckets\'s repo API')
 
-        request.raise_for_status()
-        repo = json.loads(request.content)
+        if response.status_code != 200:
+            raise ClientError('Server error {0}'.format(response.status_code))
+
+        repo = json.loads(response.content)
 
         self.discovered['description'] = repo['description']
         self.discovered['url'] = repo['website']
@@ -317,7 +320,7 @@ class GitHubClient(SourceClient):
                 self.name,
             )
 
-            request = self.session.request(
+            response = self.session.request(
                 'get',
                 url,
                 timeout=settings.API_TIMEOUT,
@@ -326,8 +329,10 @@ class GitHubClient(SourceClient):
             raise ClientTimeoutError('Timeout while reading from '
                                      'Github\'s repo API')
 
-        request.raise_for_status()
-        repo = json.loads(request.content)
+        if response.status_code != 200:
+            raise ClientError('Server error {0}'.format(response.status_code))
+
+        repo = json.loads(response.content)
         self.discovered['url'] = repo['homepage']
         self.discovered['description'] = repo['description']
 
@@ -337,7 +342,7 @@ class GitHubClient(SourceClient):
                 self.name,
             )
 
-            request = self.session.request(
+            response = self.session.request(
                 'get',
                 url,
                 params={'recursive': '1'},
@@ -347,8 +352,10 @@ class GitHubClient(SourceClient):
             raise ClientTimeoutError('Timeout while reading from '
                                      'Github\'s git API')
 
-        request.raise_for_status()
-        trees = [json.loads(request.content)]
+        if response.status_code != 200:
+            raise ClientError('Server error {0}'.format(response.status_code))
+
+        trees = [json.loads(response.content)]
         files = []
 
         i = 0
