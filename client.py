@@ -3,7 +3,6 @@ import tempfile
 import threading
 import os
 import requests
-from requests.exceptions import RequestException
 import simplejson as json
 from urlparse import urlparse
 import cache
@@ -137,7 +136,7 @@ class SourceClient(object):
     def _temp_directory(self):
         tmp = settings.SOURCE_TEMP
         if not os.path.exists(tmp):
-            os.mkdir(tmp, mode=0700)
+            os.mkdir(tmp, 0700)
         return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
 
     def cache(self):
@@ -267,7 +266,7 @@ class GitClient(SourceClient):
                         out_dir, '', 1).lstrip('/'))
 
 
-class GitHubClient(SourceClient):
+class GitHubClient(GitClient):
     def __init__(self, url):
         super(GitHubClient, self).__init__(url)
         self.session = requests.session()
@@ -336,41 +335,7 @@ class GitHubClient(SourceClient):
         self.discovered['url'] = repo['homepage']
         self.discovered['description'] = repo['description']
 
-        try:
-            url = settings.GITHUB_URL + '/repos/{}/{}/git/trees/HEAD'.format(
-                self.author,
-                self.name,
-            )
-
-            response = self.session.request(
-                'get',
-                url,
-                params={'recursive': '1'},
-                timeout=settings.API_TIMEOUT,
-            )
-        except requests.Timeout:
-            raise ClientTimeoutError('Timeout while reading from '
-                                     'Github\'s git API')
-
-        if response.status_code != 200:
-            raise ClientError('Server error {0}'.format(response.status_code))
-
-        trees = [json.loads(response.content)]
-        files = []
-
-        i = 0
-        while i < len(trees):
-            obj = trees[i]
-
-            if isinstance(obj, list):
-                for child in obj:
-                    if isinstance(child, dict) and child.get('type') == 'blob':
-                        files.append(child['path'])
-
-            if 'tree' in obj:
-                trees.append(obj['tree'])
-            i += 1
-        self.files = files
+        super(GitHubClient, self).fetch()
 
 
 class CachedClient(SourceClient):
