@@ -29,7 +29,7 @@ class TestGenerator(unittest.TestCase):
         ]
 
         setup = create_setup(client)
-        self.assertEqual('readme', setup.readme)
+        self.assertEqual('readme', setup.readme.data)
 
         client.files = [
             'README.rst',
@@ -38,7 +38,7 @@ class TestGenerator(unittest.TestCase):
         ]
 
         setup = create_setup(client)
-        self.assertEqual('README.rst', setup.readme)
+        self.assertEqual('README.rst', setup.readme.data)
 
 if __name__ == '__main__':
     unittest.main()

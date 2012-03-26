@@ -26,7 +26,10 @@ class TestFinished(unittest.TestCase):
         # stops command execution
         distutils.core._setup_stop_after = "init"
         dist = None
-        exec src
+        try:
+            exec src
+        except:
+            print 'failed to execute source:\n', src
 
         self.assertIsNotNone(dist)
         # none of this works

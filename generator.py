@@ -1,10 +1,12 @@
 import os
 import re
+import cache
 from template import template
 import jinja2
 import simplejson as json
 from wtforms import form, fields
 import logging
+from uuid import uuid4 as uuid
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ def create_setup(client=None):
 
     packages = []
     modules = []
+    readme = None
 
     if client:
         packages = [os.path.dirname(f)
@@ -50,12 +53,13 @@ def create_setup(client=None):
                 if not module.endswith('setup') and package not in packages:
                     modules.append(module.replace('/', '.'))
 
-            if not setup.readme:
+            if not readme:
                 match = re.match(readme_file_pattern, filename)
                 if match:
-                    setup.readme = filename
+                    readme = filename
 
     setup.process(None, **client.discovered)
+    setup.readme.data = readme
     setup.py_modules.data = modules
     setup.packages.data = packages
     return setup
@@ -71,6 +75,7 @@ class Setup(form.Form):
     url = fields.TextField()
     license = fields.SelectField(choices=license_choices)
     classifiers = fields.SelectMultipleField(choices=classifier_choices)
+    readme = fields.HiddenField()
 
     # lists
     py_modules = fields.TextField()
@@ -78,28 +83,24 @@ class Setup(form.Form):
 
     def __init__(self, *args, **kwargs):
         super(Setup, self).__init__(*args, **kwargs)
-        self.readme = None
-        if self.license.data == 'None':
-            self.license.data = None
-        if self.classifiers.data == 'None':
-            self.classifiers.data = None
+
+        self.cache_key = str(uuid()).replace('-', '')
+
+        for field in [self.license, self.classifiers]:
+            if field.data == 'None':
+                field.data = None
 
     def process(self, formdata=None, obj=None, **kwargs):
         super(Setup, self).process(formdata=formdata, obj=obj, **kwargs)
 
-        # wtforms bugs?
-        if self.license.data == 'None':
-            self.license.data = None
-        if self.classifiers.data == 'None':
-            self.classifiers.data = None
+    def cache(self):
+        data = dict(self.data)
+        data['cache_key'] = self.cache_key
 
-    def as_hidden(self):
-        data = self.data
-        data['readme'] = self.readme
+        cache.set(self.cache_key, json.dumps(data))
 
-        return '<input name="previous" value="{}" type="hidden">'.format(
-            jinja2.escape(json.dumps(data)),
-        )
+    def visible_fields(self):
+        return [f for f in self if not isinstance(f, fields.HiddenField)]
 
 
 class SetupDistutils(Setup):

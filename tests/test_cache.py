@@ -1,4 +1,5 @@
 import unittest
+import uuid
 import cache
 from client import CachedClient, SourceClient
 
@@ -9,18 +10,32 @@ class TestClient(SourceClient):
 
 class TestCache(unittest.TestCase):
     def test_cache_on(self):
-        cache.set('42', 'test')
-        self.assertEqual('test', cache.get('42'))
+        cache.set(cache.make_key('42'), 'test')
+        self.assertEqual(
+            'test',
+            cache.get(cache.make_key('42')),
+            'Make sure you\'re running memcache')
+
+    def test_cache_on(self):
+        cache.set(cache.make_key('42 a'), 'test')
+        self.assertEqual(
+            'test',
+            cache.get(cache.make_key('42 a')),
+            'test cached key handling')
+
+    def test_cache_default(self):
+        v = cache.get(str(uuid.uuid4()), 'blah')
+        self.assertEqual('blah', v)
 
     def test_from_cache(self):
         TEST_URL = 'http://asdf'
 
-        source_client = TestClient(TEST_URL)
+        source_client = TestClient(cache.make_key(TEST_URL))
         source_client.files = ['one.py', 'two.py']
         source_client.discovered = {'name': 'some_project'}
         source_client.cache()
 
-        cached = cache.get(TEST_URL)
+        cached = cache.get(cache.make_key(TEST_URL))
         self.assertIsNotNone(cached)
 
         client = CachedClient(TEST_URL, cached)

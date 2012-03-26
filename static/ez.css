@@ -17,3 +17,5 @@ ul.errors {
 #setup input[type=text], #setup select, #setup textarea { width: 660px; }
 
 #setup #classifiers { height: 200px; }
+
+#setup .edit { display: none; }

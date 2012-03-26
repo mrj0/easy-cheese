@@ -4,7 +4,7 @@ import functools
 import re
 import os
 import bottle
-import markupsafe  # unused, docs say you must import
+from markupsafe import escape
 import jinja2
 
 bottle.debug()
@@ -28,7 +28,11 @@ template = functools.partial(bottle.template,
 def is_ascii(s):
     if not s:
         return True
-    return all(ord(c) < 128 for c in s)
+    try:
+        s.decode('ascii')
+        return True
+    except UnicodeEncodeError:
+        return False
 
 
 identifiers = re.compile(r'\w+')
@@ -46,17 +50,18 @@ def pyquote(value):
     if value is None:
         return value
 
-    format = '' if is_ascii(value) else 'u'
-    if '\n' in value:
-        return u"{format}'''{value}'''".format(
-            format=format,
-            value=value.replace("'''", "\\'\\'\\'")
-        )
-    value = value.replace("'", "\\'")
-    return u"{format}'{value}'".format(
-        format=format,
-        value=value,
-    )
+    if is_ascii(value):
+        escaped = repr(str(value)).decode('string_escape')
+    else:
+        escaped = unicode(repr(value).decode('unicode_escape'))
+
+    if '\n' in escaped:
+        return u"'''{}'''".format(escaped[1:-1].replace("'''", r"\'''"))
+    return escaped
+
+
+def no_code(value):
+    return u'<span class="nocode">{}</span>'.format(value)
 
 
 # filters
@@ -64,21 +69,42 @@ def pyquote(value):
 def show_field(field, setup, executable):
     name = field.name
     value = field.data
+    formatted = None
 
     if name in ('packages', 'py_modules') and value:
         if isinstance(value, list):
-            return '[{}]'.format(', '.join([pyquote(p) for p in value]))
+            formatted = '[{}]'.format(', '.join([pyquote(p) for p in value]))
+        else:
+            formatted = '[{}]'.format(', '.join(
+                [pyquote(p)
+                for p in clean_identifiers(value)]))
 
-        return '[{}]'.format(
-            ', '.join([pyquote(p) for p in clean_identifiers(value)]))
+    elif name == 'long_description':
+        if setup.readme.data:
+            return '{}=read_file({})'.format(
+                field.name,
+                pyquote(setup.readme.data))
 
-    if name == 'long_description' and setup.readme:
-        return 'read_file({})'.format(pyquote(setup.readme))
-
-    if name == 'classifiers' and value:
-        return '[\n        {},\n    ]'.format(
+    elif name == 'classifiers' and value:
+        formatted = \
+            '[\n        {},\n    ]'.format(
             ',\n        '.join([pyquote(c) for c in value]))
 
-    if not value and not executable:
-        return safe_string('<span class="nocode">{}</span>'.format(field))
-    return pyquote(value)
+    if not formatted:
+        formatted = pyquote(value)
+
+    if executable:
+        return u'{}={},'.format(field.name, formatted)
+
+    if not value:
+        return safe_string(u'{}={},'.format(
+            field.name,
+            no_code(field),
+        ))
+
+    return safe_string(u'<span class="line">{}=<span class="value">{}</span>' \
+                       u'<span class="edit">{}</span>,</span>'.format(
+        field.name,
+        escape(formatted),
+        no_code(field),
+    ))

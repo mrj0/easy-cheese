@@ -6,3 +6,5 @@ pylibmc==1.2.2
 requests==0.10.8
 simplejson==2.4.0
 wsgiref==0.1.2
+gevent==0.13.6
+gevent-subprocess==0.5.1

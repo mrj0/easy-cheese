@@ -1,14 +1,37 @@
 import pylibmc
 import settings
+import hashlib
 
 _client = pylibmc.Client(['{}:{}'.format(settings.MEMCACHED_HOST,
                                          settings. MEMCACHED_PORT)],
                          behaviors={"tcp_nodelay": True})
 
 
-def get(key):
-    return _client.get(key)
+def make_key(value):
+    return hashlib.sha256(value).hexdigest()
 
 
-def set(key, value, time=7200):
+def get(key, default=None):
+    """
+    Get a cache value.
+
+    ``key`` must be passed through ``make_key``
+    ``default`` value if not present
+    """
+
+    value = _client.get(key)
+    if value is not None:
+        return value
+    return default
+
+
+def set(key, value, time=172800):
+    """
+    Set the cache value.
+
+    ``key`` must be from ``make_key``
+    ``value`` to cache
+    ``time`` defaults to 2 days in seconds.
+    """
+
     return _client.set(key, value, time=time)

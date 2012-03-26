@@ -140,7 +140,7 @@ class SourceClient(object):
         return TemporaryDirectory(tempfile.mkdtemp(dir=tmp))
 
     def cache(self):
-        cache.set(self.url, {
+        cache.set(cache.make_key(self.url), {
             'files': self.files,
             'discovered': self.discovered,
         })

@@ -15,8 +15,7 @@
 
     <div class="row">
         <div class="span12">
-            <form id="setup" method="post" action="/">
-                {{ setup.as_hidden()|safe }}
+            <form id="setup" method="post">
                 <pre class="prettyprint">
 {{ setup.generate() }}
                 </pre>
