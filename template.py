@@ -35,17 +35,6 @@ def is_ascii(s):
         return False
 
 
-identifiers = re.compile(r'\w+')
-
-
-def clean_identifiers(input):
-    """
-    Take a string of package input, possibly delimited by ',', and
-    return a list.
-    """
-    return re.findall(identifiers, input)
-
-
 def pyquote(value):
     if value is None:
         return value
@@ -71,13 +60,9 @@ def show_field(field, setup, executable):
     value = field.data
     formatted = None
 
-    if name in ('packages', 'py_modules') and value:
-        if isinstance(value, list):
-            formatted = '[{}]'.format(', '.join([pyquote(p) for p in value]))
-        else:
-            formatted = '[{}]'.format(', '.join(
-                [pyquote(p)
-                for p in clean_identifiers(value)]))
+    if name in ('packages', 'py_modules', 'requires') and value:
+        formatted = '[{}]'.format(', '.join(
+            [pyquote(p) for p in field.as_list()]))
 
     elif name == 'long_description':
         if setup.readme.data:
@@ -94,6 +79,8 @@ def show_field(field, setup, executable):
         formatted = pyquote(value)
 
     if executable:
+        if value is None:
+            return ''
         return u'{}={},'.format(field.name, formatted)
 
     if not value:
@@ -101,6 +88,11 @@ def show_field(field, setup, executable):
             field.name,
             no_code(field),
         ))
+
+    # make sure the actual value for these fields as displayed in the hidden
+    # field parses correctly
+    if name in ('requires',) and isinstance(value, list):
+        field.data = ' '.join(value)
 
     return safe_string(u'<span class="line">{}=<span class="value">{}</span>' \
                        u'<span class="edit">{}</span>,</span>'.format(

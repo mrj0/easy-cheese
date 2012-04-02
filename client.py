@@ -2,6 +2,9 @@ import shutil
 import tempfile
 import threading
 import os
+from pip.exceptions import InstallationError
+from pip.req import parse_requirements
+import re
 import requests
 import simplejson as json
 from urlparse import urlparse
@@ -47,8 +50,10 @@ def client_for_url(url, repo_type=None):
 
 class TemporaryDirectory(object):
 
-    def __init__(self, name):
+    def __init__(self, name=None):
         self.name = name
+        if not self.name:
+            self.name = tempfile.mkdtemp()
 
     def __enter__(self):
         return self
@@ -131,6 +136,10 @@ class SourceClient(object):
         self.files = []
         self.discovered = {}
 
+        # options for parse_requirements
+        self.skip_requirements_regex = '^(-r|--requirement)'
+        self.default_vcs = 'git'
+
         log.info('%s with client URL "%s"', type(self), self.url)
 
     def _temp_directory(self):
@@ -145,11 +154,32 @@ class SourceClient(object):
             'discovered': self.discovered,
         })
 
+    def _find_requires(self, dir):
+        """
+        Look for a requirements file and discover ``requires``
+        """
+        pn = re.compile(r'.*require.*\.txt$', re.I)
+        requires = []
+
+        for root, dirs, files in os.walk(dir):
+            for filename in files:
+                if re.match(pn, filename):
+                    try:
+                        for req in parse_requirements(
+                                os.path.join(dir, root, filename),
+                                options=self):
+                            requires.append(str(req.req))
+                    except InstallationError:
+                        log.exception('ignored')
+
+        self.discovered['requires'] = requires
+
 
 class MercurialClient(SourceClient):
 
     def __init__(self, url):
         super(MercurialClient, self).__init__(url)
+        self.default_vcs = 'hg'
 
         if not settings.DEBUG:
             if self.url.startswith('/'):
@@ -176,6 +206,8 @@ class MercurialClient(SourceClient):
                 for file in files:
                     self.files.append(os.path.join(root, file).replace(
                         out_dir, '', 1).lstrip('/'))
+
+            self._find_requires(out_dir)
 
 
 class BitbucketClient(MercurialClient):
@@ -264,6 +296,8 @@ class GitClient(SourceClient):
                 for file in files:
                     self.files.append(os.path.join(root, file).replace(
                         out_dir, '', 1).lstrip('/'))
+
+            self._find_requires(out_dir)
 
 
 class GitHubClient(GitClient):

@@ -1,6 +1,9 @@
 import os
+from pip import InstallationError
+from pip.req import parse_requirements
 import re
 import cache
+from fields import RequiresField, ModulesField, PackagesField
 from template import template
 import jinja2
 import simplejson as json
@@ -14,8 +17,8 @@ safe_string = jinja2.Markup
 
 SETUP_PY_TEMPLATE = 'setup_py.tpl'
 
-python_file_pattern = re.compile('(.*)\.(py|pyc|pyo)$', re.I)
-readme_file_pattern = re.compile('readme(\..*)?$', re.I)
+python_file_pattern = re.compile(r'(.*)\.(py|pyc|pyo)$', re.I)
+readme_file_pattern = re.compile(r'readme(\..*)?$', re.I)
 
 from trove import all_classifiers
 license_choices = \
@@ -60,8 +63,8 @@ def create_setup(client=None):
 
     setup.process(None, **client.discovered)
     setup.readme.data = readme
-    setup.py_modules.data = modules
-    setup.packages.data = packages
+    setup.py_modules.data = ' '.join(modules)
+    setup.packages.data = ' '.join(packages)
     return setup
 
 
@@ -78,8 +81,9 @@ class Setup(form.Form):
     readme = fields.HiddenField()
 
     # lists
-    py_modules = fields.TextField()
-    packages = fields.TextField()
+    py_modules = ModulesField()
+    packages = PackagesField()
+    requires = RequiresField()
 
     def __init__(self, *args, **kwargs):
         super(Setup, self).__init__(*args, **kwargs)

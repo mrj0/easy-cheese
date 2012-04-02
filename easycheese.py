@@ -89,9 +89,13 @@ def application(environ, start_response):
     return bottle.app()(environ, start_response)
 
 if __name__ == '__main__':
+    # register version control backends
+    import pip
+    pip.version_control()
+
     # see http://bottlepy.org/docs/stable/async.html
     run(host='localhost',
-        port=8080,
+        port=8000,
         reloader=True,
         server='gevent',
     )

@@ -15,8 +15,8 @@ GITHUB_URL = 'https://api.github.com'
 
 BITBUCKET_URL = 'https://api.bitbucket.org/1.0'
 
-# how long to wait for a clone
-CLONE_TIMEOUT = 30
+# how long to wait for a clone in seconds
+CLONE_TIMEOUT = 60
 
 MEMCACHED_HOST = 'localhost'
 MEMCACHED_PORT = 11211
@@ -28,5 +28,5 @@ API_TIMEOUT = 30
 
 try:
     from local_settings import *
-except:
+except ImportError:
     pass
