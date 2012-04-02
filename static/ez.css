@@ -19,3 +19,5 @@ ul.errors {
 #setup #classifiers { height: 200px; }
 
 #setup .edit { display: none; }
+
+#setup .btn-large { margin: 0 20px 0 0; }

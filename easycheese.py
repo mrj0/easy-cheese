@@ -6,7 +6,7 @@ from generator import create_setup, SetupDistutils
 from template import template
 
 import bottle
-from bottle import get, post, static_file, request, route, run, redirect
+from bottle import get, post, static_file, request, route, run, redirect, HTTPResponse
 
 import logging
 log = logging.getLogger(__name__)
@@ -15,6 +15,12 @@ log = logging.getLogger(__name__)
 @get('/')
 def display_form():
     return template('form.html', data={})
+
+
+@get('/manual/')
+def display_manual():
+    setup = SetupDistutils()
+    return redirect('/setup/{}/'.format(setup.cache_key))
 
 
 @post('/')
@@ -55,6 +61,21 @@ def process():
     yield redirect('/setup/{}/'.format(setup.cache_key))
 
 
+@get('/setup/:key#[a-fA-F0-9]+#/setup.py')
+def view_executable(key):
+    data = {}
+    data.update(json.loads(cache.get(key, default='{}')))
+
+    setup = SetupDistutils(**data)
+    setup.cache_key = key
+    setup.validate()
+
+    return HTTPResponse(
+        setup.generate(executable=True),
+        header={'Content-type': 'text/x-python'},
+    )
+
+
 @get('/setup/:key#[a-fA-F0-9]+#/')
 @post('/setup/:key#[a-fA-F0-9]+#/')
 def view_setup(key):
@@ -68,15 +89,13 @@ def view_setup(key):
         data[k] = request.POST.getunicode(k)
     data['classifiers'] = request.POST.getlist('classifiers')
 
-    for name in ['classifiers',]:
-        if data.get(name, 'missing') is None:
-            data[name] = []
-
     setup = SetupDistutils(**data)
     setup.cache_key = key
     setup.validate()
     setup.cache()
 
+    if 'save' in request.POST:
+        return redirect(request.path + 'setup.py')
     return template('setup.html', setup=setup)
 
 

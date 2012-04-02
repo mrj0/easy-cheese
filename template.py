@@ -14,7 +14,7 @@ safe_string = jinja2.Markup
 
 class CustomJinja2Template(bottle.Jinja2Template):
     def prepare(self, filters=None, tests=None, **kwargs):
-        kwargs['autoescape'] = True
+        #kwargs['autoescape'] = True
         filters = {'show_field': show_field}
         return super(CustomJinja2Template, self).prepare(
             filters=filters, tests=tests, **kwargs)
@@ -67,12 +67,15 @@ def show_field(field, setup, executable):
         if setup.readme.data:
             return '{}=read_file({})'.format(
                 field.name,
-                pyquote(setup.readme.data))
+                pyquote(escape(setup.readme.data)))
 
-    elif name == 'classifiers' and value:
-        formatted = \
-            '[\n        {},\n    ]'.format(
-            ',\n        '.join([pyquote(c) for c in value]))
+    elif name == 'classifiers' and value is not None:
+        if value:
+            formatted = \
+                '[\n        {},\n    ]'.format(
+                ',\n        '.join([pyquote(c) for c in value]))
+        else:
+            formatted = '[]'
 
     if not formatted:
         formatted = pyquote(value)

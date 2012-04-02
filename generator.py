@@ -2,7 +2,7 @@ import os
 import re
 import cache
 from fields import RequiresField, ModulesField, PackagesField
-from template import template
+from template import template, show_field
 import jinja2
 import simplejson as json
 from wtforms import form, fields
@@ -109,9 +109,22 @@ class SetupDistutils(Setup):
 
     def generate(self, executable=False, under_test=False):
         try:
+            indent = '    '
+            args = ''
+
+            for field in self.visible_fields():
+                # don't show field at all if executable is on
+                if not field.data and executable:
+                    continue
+
+                args += u'{}{}\n'.format(
+                    indent,
+                    show_field(field, self, executable))
+
             return safe_string(template(SETUP_PY_TEMPLATE,
                                         setup=self,
                                         executable=executable,
+                                        setup_arguments=args,
                                         under_test=under_test))
         except Exception:
             log.exception('Failed to generate setup.py')
