@@ -1,6 +1,4 @@
 import os
-from pip import InstallationError
-from pip.req import parse_requirements
 import re
 import cache
 from fields import RequiresField, ModulesField, PackagesField

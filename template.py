@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import functools
-import re
 import os
 import bottle
 from markupsafe import escape
