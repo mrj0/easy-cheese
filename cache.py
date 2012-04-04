@@ -2,10 +2,13 @@ import pylibmc
 import settings
 import hashlib
 
-_client = pylibmc.Client(settings.MEMCACHE_SERVERS,
-                         username=settings.MEMCACHE_USERNAME,
-                         password=settings.MEMCACHE_PASSWORD,
-                         behaviors={"tcp_nodelay": True})
+_client = pylibmc.Client(
+    settings.MEMCACHE_SERVERS,
+    username=settings.MEMCACHE_USERNAME,
+    password=settings.MEMCACHE_PASSWORD,
+    behaviors={"tcp_nodelay": True},
+    binary=True,
+)
 
 
 def make_key(value):
