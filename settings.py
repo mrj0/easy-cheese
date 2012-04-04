@@ -1,3 +1,4 @@
+import os
 import logging
 
 logging.basicConfig(
@@ -18,8 +19,9 @@ BITBUCKET_URL = 'https://api.bitbucket.org/1.0'
 # how long to wait for a clone in seconds
 CLONE_TIMEOUT = 60
 
-MEMCACHED_HOST = 'localhost'
-MEMCACHED_PORT = 11211
+MEMCACHE_SERVERS = [os.environ.get('MEMCACHE_SERVERS', 'localhost:11211')]
+MEMCACHE_USERNAME = os.environ.get('MEMCACHE_USERNAME')
+MEMCACHE_PASSWORD = os.environ.get('MEMCACHE_PASSWORD')
 
 SOURCE_TEMP = '/tmp/ez'
 

@@ -2,8 +2,9 @@ import pylibmc
 import settings
 import hashlib
 
-_client = pylibmc.Client(['{}:{}'.format(settings.MEMCACHED_HOST,
-                                         settings. MEMCACHED_PORT)],
+_client = pylibmc.Client(settings.MEMCACHE_SERVERS,
+                         username=settings.MEMCACHE_USERNAME,
+                         password=settings.MEMCACHE_PASSWORD,
                          behaviors={"tcp_nodelay": True})
 
 
