@@ -1,7 +1,7 @@
 Jinja2==2.6
 MarkupSafe==0.15
 WTForms==1.0.1
-bottle==0.10.9
+git+git://github.com/mrj0/bottle.git@b5f49950e61511c4b17d3effed1e171898826258#egg=bottle
 pylibmc==1.2.2
 requests==0.10.8
 simplejson==2.4.0
