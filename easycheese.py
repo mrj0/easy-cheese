@@ -38,7 +38,12 @@ def process():
         setup = create_setup(client)
 
     # attempt to build from version control url
+    cloning = False
+
     if not client and url:
+        cloning = True
+        yield template('cloning_top.html')
+
         try:
             client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
@@ -51,14 +56,19 @@ def process():
 
             client = None
 
+    if not setup:
+        setup = SetupDistutils()
+    setup.cache()
+
     if client:
         client.cache()
-    if setup:
-        setup.cache()
-    else:
-        setup = SetupDistutils()
 
-    yield redirect('/setup/{}/'.format(setup.cache_key))
+    if cloning:
+        # bottle fails to handle returning a HttpResponse here,
+        # so using javascript workaround for now
+        yield template('cloning_finished.html', key=setup.cache_key)
+    else:
+        yield redirect('/setup/{}/'.format(setup.cache_key))
 
 
 @get('/setup/:key#[a-fA-F0-9]+#/setup.py')
