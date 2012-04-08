@@ -8,9 +8,9 @@ logging.basicConfig(
 
 DEBUG = True
 
-MERCURIAL_BIN = '/usr/local/bin/hg'
+MERCURIAL_BIN = '/usr/bin/hg'
 
-GIT_BIN = '/usr/local/bin/git'
+GIT_BIN = '/usr/bin/git'
 
 GITHUB_URL = 'https://api.github.com'
 
