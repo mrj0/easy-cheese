@@ -35,7 +35,9 @@ class TemporaryDirectory(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        shutil.rmtree(self.name)
+        pass
+        # do not delete the temp folder. this is a job for cron
+        # shutil.rmtree(self.name)
 
 
 def _temp_directory():
