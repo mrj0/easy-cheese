@@ -1,11 +1,12 @@
 import unittest
 from dulwich.client import HttpGitClient, TCPGitClient
+import mercurial
 from mock import patch
 import os
 import requests
 from client import SourceClient, _fetch_mercurial, ClientError, _fetch_git,\
     _fetch_github, _fetch_bitbucket
-from command import Command, CommandTimeoutException
+import client
 from tests.util import SettingsOverride
 
 
@@ -19,14 +20,6 @@ def touch_test_files(out_dir, files):
             os.makedirs(os.path.dirname(new_file))
         with open(new_file, 'w') as f:
             f.write('')
-
-
-class FakeCommand(Command):
-    fake_files = []
-
-    def run(self):
-        out_dir = [arg for arg in self.args[0] if arg.endswith('src')][0]
-        touch_test_files(out_dir, FakeCommand.fake_files)
 
 
 class FakeRequestsSession(object):
@@ -115,10 +108,11 @@ BITBUCKET_SOUTH_REPO = '''
 
 
 class TestClient(unittest.TestCase):
-    def test_mercurial_fetch(self):
-        import client
-        FakeCommand.fake_files = ['test_file', '.hg/somefile']
-        client.Command = FakeCommand
+    @patch.object(client, 'hg_clone')
+    def test_mercurial_fetch(self, mock):
+        def make_test_files(*args, **kwargs):
+            touch_test_files(kwargs['dest'], ['test_file', '.hg/somefile'])
+        mock.side_effect = make_test_files
 
         client = SourceClient('ssh://hg@bitbucket.org/andrewgodwin/south', 'hg')
         _fetch_mercurial(client)
@@ -199,18 +193,6 @@ class TestClient(unittest.TestCase):
             client.discovered['description']
         )
 
-    def test_command(self):
-        with Command('echo hello', shell=True) as cmd:
-            self.assertEqual('hello', cmd.run()[0].strip())
-
-        with Command(['sleep', '100000'], timeout=.1) as cmd:
-            self.assertRaises(CommandTimeoutException, cmd.run)
-
-
-#    def test_list_files(self):
-#        client = client_for_url('http://github.com/mrj0/jep.git')
-#        self.assertIsInstance(client, GitHubClient)
-#        self.assertEqual(93, len(client.fetch()))
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,3 +10,4 @@ gevent==0.13.6
 gunicorn==0.14.2
 dulwich==0.8.5
 mock==0.8.0
+mercurial==2.1.1 # install 2.1.2 on OS X from hg tip due to bug

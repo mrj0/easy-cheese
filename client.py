@@ -11,7 +11,8 @@ import cache
 import settings
 import logging
 from urlparse import urlparse
-from command import Command
+from mercurial.commands import clone as hg_clone
+from mercurial import ui
 
 
 log = logging.getLogger(__name__)
@@ -113,22 +114,15 @@ def _fetch_mercurial(client):
     with _temp_directory() as tmpdir:
         out_dir = os.path.join(tmpdir.name, 'src')
 
-        args = [settings.MERCURIAL_BIN,
-                'clone',
-                str(client.url),
-                out_dir,
-                ]
+        hg_clone(ui.ui(), client.url, dest=out_dir)
 
-        with Command(args) as cmd:
-            cmd.run()
+        for root, dirs, files in os.walk(out_dir):
+            if '.hg' in dirs:
+                dirs.remove('.hg')
 
-            for root, dirs, files in os.walk(out_dir):
-                if '.hg' in dirs:
-                    dirs.remove('.hg')
-
-                for file in files:
-                    client.files.append(os.path.join(root, file).replace(
-                        out_dir, '', 1).lstrip('/'))
+            for file in files:
+                client.files.append(os.path.join(root, file).replace(
+                    out_dir, '', 1).lstrip('/'))
 
         _find_requires(client, out_dir)
 
