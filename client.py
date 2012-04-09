@@ -106,7 +106,7 @@ def _find_requires(client, dir):
 
 def _fetch_mercurial(client):
     if not settings.DEBUG:
-        if client.url.startswith('/'):
+        if client.url.startswith('/') or os.path.exists(client.url):
             raise ClientError('File urls not allowed')
 
     with _temp_directory() as tmpdir:
@@ -132,9 +132,10 @@ def _fetch_mercurial(client):
         _find_requires(client, out_dir)
 
 
-def _fetch_bitbucket(client):
-    session = requests.session()
-    session.headers.update({'Accept': 'application/json'})
+def _fetch_bitbucket(client, session=None):
+    if not session:
+        session = requests.session()
+        session.headers.update({'Accept': 'application/json'})
 
     path = urlparse(client.url).path
     if not path:
@@ -176,14 +177,14 @@ def _fetch_bitbucket(client):
     client.discovered['description'] = repo['description']
     client.discovered['url'] = repo['website']
 
-    if 'fork_of' in repo:
+    if 'fork_of' in repo and repo['fork_of']:
         client.discovered['description'] = repo['fork_of']['description']
         client.discovered['url'] = repo['fork_of']['website']
 
 
 def _fetch_git(client):
     if not settings.DEBUG:
-        if client.url.startswith('/'):
+        if client.url.startswith('/') or os.path.exists(client.url):
             raise ClientError('File urls not allowed')
 
     with _temp_directory() as temp_dir:
@@ -211,9 +212,10 @@ def _fetch_git(client):
         _find_requires(client, out_dir)
 
 
-def _fetch_github(client):
-    session = requests.session()
-    session.headers.update({'Accept': 'application/json'})
+def _fetch_github(client, session=None):
+    if not session:
+        session = requests.session()
+        session.headers.update({'Accept': 'application/json'})
 
     if '://' in client.url:
         # handle urls with schemes
