@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+import threading
 import os
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
@@ -61,6 +62,74 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.name)
 
 
+class CommandException(Exception):
+    pass
+
+
+class CommandTimeoutException(Exception):
+    pass
+
+
+class Command(object):
+    def __init__(self, *args, **kwargs):
+        self.process = None
+        self.args = args
+        self.kwargs = kwargs
+        self.thread = None
+
+        self.timeout = self.kwargs.pop('timeout', settings.CLONE_TIMEOUT)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        try:
+            if self.process:
+                self.process.kill()
+        except OSError:
+            pass
+        except Exception:
+            log.exception('failed to kill process')
+
+        if self.thread:
+            self.thread.join()
+
+    def run(self):
+        def target():
+            try:
+                log.info('popen args=%s kwargs=%s', self.args, self.kwargs)
+
+                self.kwargs['stdout'] = subprocess.PIPE
+                self.kwargs['stdin'] = subprocess.PIPE
+                self.process = subprocess.Popen(*self.args, **self.kwargs)
+                self.communicate = self.process.communicate()
+            except Exception:
+                log.exception('thread exception')
+
+        self.communicate = ()
+
+        self.thread = threading.Thread(target=target)
+        self.thread.start()
+        self.thread.join(self.timeout)
+
+        if self.thread.is_alive():
+            log.error('Terminating process')
+            self.process.kill()
+            raise CommandTimeoutException()
+
+        if self.process and \
+           self.process.returncode is not None and \
+           self.process.returncode != 0:
+
+            log.error('Command failed: args={} kwargs={}'.format(
+                self.args, self.kwargs))
+            raise CommandException(
+                'Command returned a non-zero status {}'.format(
+                    self.process.returncode))
+
+        return self.communicate
+
+
 class SourceClient(object):
     def __init__(self, url):
         self.url = url
@@ -118,27 +187,26 @@ class MercurialClient(SourceClient):
 
     def fetch(self):
         with self._temp_directory() as tmpdir:
-
             out_dir = os.path.join(tmpdir.name, 'hg')
-            try:
-                subprocess.check_call([
-                    settings.MERCURIAL_BIN,
+
+            args = [settings.MERCURIAL_BIN,
                     'clone',
                     str(self.url),
                     out_dir,
-                ])
-            except subprocess.CalledProcessError:
-                log.exception('Failed to clone mercurial repo')
+                    ]
 
-            for root, dirs, files in os.walk(out_dir):
-                if '.hg' in dirs:
-                    dirs.remove('.hg')
+            with Command(args) as cmd:
+                cmd.run()
 
-                for file in files:
-                    self.files.append(os.path.join(root, file).replace(
-                        out_dir, '', 1).lstrip('/'))
+                for root, dirs, files in os.walk(out_dir):
+                    if '.hg' in dirs:
+                        dirs.remove('.hg')
 
-            self._find_requires(out_dir)
+                    for file in files:
+                        self.files.append(os.path.join(root, file).replace(
+                            out_dir, '', 1).lstrip('/'))
+
+                self._find_requires(out_dir)
 
 
 class BitbucketClient(MercurialClient):
@@ -205,30 +273,29 @@ class GitClient(SourceClient):
                 raise ClientError('File urls not allowed')
 
     def fetch(self):
-        with self._temp_directory() as tmpdir:
+        with self._temp_directory() as temp_dir:
+            out_dir = os.path.join(temp_dir.name, 'git')
 
-            out_dir = os.path.join(tmpdir.name, 'git')
-            try:
-                subprocess.check_call([
-                    settings.GIT_BIN,
+            args = [settings.GIT_BIN,
                     'clone',
                     '--depth',
                     '1',
                     str(self.url),
                     out_dir,
-                ])
-            except subprocess.CalledProcessError:
-                log.exception('Failed to clone git repo')
+                    ]
 
-            for root, dirs, files in os.walk(out_dir):
-                if '.git' in dirs:
-                    dirs.remove('.git')
+            with Command(args) as cmd:
+                cmd.run()
 
-                for file in files:
-                    self.files.append(os.path.join(root, file).replace(
-                        out_dir, '', 1).lstrip('/'))
+                for root, dirs, files in os.walk(out_dir):
+                    if '.git' in dirs:
+                        dirs.remove('.git')
 
-            self._find_requires(out_dir)
+                    for file in files:
+                        self.files.append(os.path.join(root, file).replace(
+                            out_dir, '', 1).lstrip('/'))
+
+                self._find_requires(out_dir)
 
 
 class GitHubClient(GitClient):

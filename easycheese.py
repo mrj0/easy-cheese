@@ -1,7 +1,7 @@
 from gevent import monkey; monkey.patch_all()
 import simplejson as json
 import cache
-from client import client_for_url, ClientError, CachedClient
+from client import client_for_url, ClientError, CachedClient, CommandException
 from generator import create_setup, SetupDistutils
 from template import template
 
@@ -48,7 +48,7 @@ def process():
             client = client_for_url(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
-        except (ClientError, IOError):
+        except Exception:
             log.exception('ignored')
 
             # failed to get a list of files in repo, but ensure that
