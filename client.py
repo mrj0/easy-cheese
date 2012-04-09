@@ -1,6 +1,7 @@
 import tempfile
 from dulwich.client import get_transport_and_path
 from dulwich.repo import Repo
+from gevent import Timeout
 import os
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
@@ -114,7 +115,8 @@ def _fetch_mercurial(client):
     with _temp_directory() as tmpdir:
         out_dir = os.path.join(tmpdir.name, 'src')
 
-        hg_clone(ui.ui(), client.url, dest=out_dir)
+        with Timeout(settings.CLONE_TIMEOUT):
+            hg_clone(ui.ui(), client.url, dest=out_dir)
 
         for root, dirs, files in os.walk(out_dir):
             if '.hg' in dirs:
@@ -187,7 +189,9 @@ def _fetch_git(client):
 
         git, path = get_transport_and_path(client.url)
         local = Repo.init(out_dir, mkdir=True)
-        git.fetch(path, local)
+
+        with Timeout(settings.CLONE_TIMEOUT):
+            git.fetch(path, local)
 
         for root, dirs, files in os.walk(out_dir):
             if '.git' in dirs:

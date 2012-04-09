@@ -48,7 +48,7 @@ def process():
             client = SourceClient(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
-        except Exception:
+        except BaseException:
             log.exception('ignored')
 
             # failed to get a list of files in repo, but ensure that
