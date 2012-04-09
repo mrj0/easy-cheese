@@ -1,7 +1,7 @@
 from gevent import monkey; monkey.patch_all()
 import simplejson as json
 import cache
-from client import client_for_url, ClientError, CachedClient, CommandException
+from client import CachedClient, SourceClient
 from generator import create_setup, SetupDistutils
 from template import template
 
@@ -45,7 +45,7 @@ def process():
         yield template('cloning_top.html')
 
         try:
-            client = client_for_url(url, request.POST.get('repo_type'))
+            client = SourceClient(url, request.POST.get('repo_type'))
             client.fetch()
             setup = create_setup(client)
         except Exception:

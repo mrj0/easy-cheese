@@ -30,7 +30,7 @@ class TestCache(unittest.TestCase):
     def test_from_cache(self):
         TEST_URL = 'http://asdf'
 
-        source_client = TestClient(TEST_URL)
+        source_client = TestClient(TEST_URL, 'git')
         source_client.files = ['one.py', 'two.py']
         source_client.discovered = {'name': 'some_project'}
         source_client.cache()
