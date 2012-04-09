@@ -1,4 +1,6 @@
 import unittest
+from dulwich.client import HttpGitClient, TCPGitClient
+from mock import patch
 import os
 import requests
 from client import SourceClient, _fetch_mercurial, ClientError, _fetch_git,\
@@ -6,19 +8,25 @@ from client import SourceClient, _fetch_mercurial, ClientError, _fetch_git,\
 from command import Command, CommandTimeoutException
 from tests.util import SettingsOverride
 
+
+def touch_test_files(out_dir, files):
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    for name in files:
+        new_file = os.path.join(out_dir, name)
+        if not os.path.exists(os.path.dirname(new_file)):
+            os.makedirs(os.path.dirname(new_file))
+        with open(new_file, 'w') as f:
+            f.write('')
+
+
 class FakeCommand(Command):
     fake_files = []
 
     def run(self):
         out_dir = [arg for arg in self.args[0] if arg.endswith('src')][0]
-
-        os.makedirs(out_dir)
-        for name in FakeCommand.fake_files:
-            new_file = os.path.join(out_dir, name)
-            if not os.path.exists(os.path.dirname(new_file)):
-                os.makedirs(os.path.dirname(new_file))
-            with open(new_file, 'w') as f:
-                f.write('')
+        touch_test_files(out_dir, FakeCommand.fake_files)
 
 
 class FakeRequestsSession(object):
@@ -26,7 +34,7 @@ class FakeRequestsSession(object):
         self.args = None
         self.kwargs = None
         self.content = content
-        self.status_code = 200
+        self.status_code = status_code
 
     def request(self, *args, **kwargs):
         self.args = args
@@ -117,12 +125,24 @@ class TestClient(unittest.TestCase):
         self.assertTrue('test_file' in client.files)
         self.assertFalse('.hg/somefile' in client.files)
 
-    def test_git_fetch(self):
-        import client
-        FakeCommand.fake_files = ['test_file', '.git/somefile']
-        client.Command = FakeCommand
+    @patch.object(HttpGitClient, 'fetch')
+    def test_git_fetch(self, mock):
+        def make_test_files(path, local):
+            touch_test_files(local.path, ['test_file', '.git/somefile'])
+        mock.side_effect = make_test_files
 
-        client = SourceClient('git@github.com:mrj0/jep.git', 'git')
+        client = SourceClient('https://github.com/mrj0/jep.git', 'git')
+        _fetch_git(client)
+        self.assertTrue('test_file' in client.files)
+        self.assertFalse('.git/somefile' in client.files)
+
+    @patch.object(TCPGitClient, 'fetch')
+    def test_git_fetch_tcp(self, mock):
+        def make_test_files(path, local):
+            touch_test_files(local.path, ['test_file', '.git/somefile'])
+        mock.side_effect = make_test_files
+
+        client = SourceClient('git://github.com/mrj0/jep.git', 'git')
         _fetch_git(client)
         self.assertTrue('test_file' in client.files)
         self.assertFalse('.git/somefile' in client.files)

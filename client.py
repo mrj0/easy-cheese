@@ -1,5 +1,6 @@
-import shutil
 import tempfile
+from dulwich.client import get_transport_and_path
+from dulwich.repo import Repo
 import os
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
@@ -190,24 +191,17 @@ def _fetch_git(client):
     with _temp_directory() as temp_dir:
         out_dir = os.path.join(temp_dir.name, 'src')
 
-        args = [settings.GIT_BIN,
-                'clone',
-                '--depth',
-                '1',
-                str(client.url),
-                out_dir,
-                ]
+        git, path = get_transport_and_path(client.url)
+        local = Repo.init(out_dir, mkdir=True)
+        git.fetch(path, local)
 
-        with Command(args) as cmd:
-            cmd.run()
+        for root, dirs, files in os.walk(out_dir):
+            if '.git' in dirs:
+                dirs.remove('.git')
 
-            for root, dirs, files in os.walk(out_dir):
-                if '.git' in dirs:
-                    dirs.remove('.git')
-
-                for file in files:
-                    client.files.append(os.path.join(root, file).replace(
-                        out_dir, '', 1).lstrip('/'))
+            for file in files:
+                client.files.append(os.path.join(root, file).replace(
+                    out_dir, '', 1).lstrip('/'))
 
         _find_requires(client, out_dir)
 

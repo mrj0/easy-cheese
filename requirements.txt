@@ -8,3 +8,5 @@ simplejson==2.4.0
 wsgiref==0.1.2
 gevent==0.13.6
 gunicorn==0.14.2
+dulwich==0.8.5
+mock==0.8.0
