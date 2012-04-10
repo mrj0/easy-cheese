@@ -1,3 +1,5 @@
+h1 { margin: 2em 0 1em 0; }
+
 #setupdotpy_modal { background: #fff; padding: 20px; position: fixed; top: 20%; left: 50%;  border: 1px solid #333; }
 
 #setup_required_fields label { margin-top: 1em; }
