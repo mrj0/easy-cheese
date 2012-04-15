@@ -189,6 +189,7 @@ def _fetch_git(client):
 
         git, path = get_transport_and_path(client.url)
         local = Repo.init(out_dir, mkdir=True)
+        log.info('fetching {} using path {}'.format(client.url, path))
 
         with Timeout(settings.CLONE_TIMEOUT):
             git.fetch(path, local)
