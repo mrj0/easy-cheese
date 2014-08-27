@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from distutils.core import setup
+{% if setup.readme.data %}
+import codecs, os
+def read_file(name):
+    return codecs.open(os.path.join(os.path.dirname(__file__), name),
+                       encoding='utf-8').read()
+{% endif %}
+{% if under_test %}dist = {% endif %}setup(
+{{ setup_arguments }})
+
+
+from setuptools import setup, find_packages
+
+
+setup(
+    name="chassis",
+    version="0.999",
+    description="TrueCar's Universal Chassis for Flask",
+    url="http://git2.code.wc.truecarcorp.com/bridgekeeper/chassis-flask",
+    long_description="TrueCar's Universal Chassis for Flask",
+    author="Truecar Universal",
+    author_email="dpDev@truecar.com",
+    maintainer="Mike Johnson",
+    maintainer_email="mjohnson@truecar.com",
+    license="Proprietary",
+    packages=find_packages(exclude=("tests",)),
+    test_suite="nose.collector",
+    install_requires=[
+        "Flask==0.10.1",
+        "Flask-Assets==0.6.2.1",
+        "Flask-WTF==0.8.4",
+        "WTForms==1.0.4",
+        "gunicorn==17.5",
+        "Jinja2==2.6",
+        "MarkupSafe==0.15",
+        "python-cjson==1.0.5",
+        "Werkzeug==0.8.2",
+        "webassets==0.7.dev",
+        "yuicompressor==2.4.6.1",
+        'inflect==0.2.4',
+        "skip32==1.0",
+        "markdown2==2.1.0",
+        "blinker==1.3.0",  # for raven
+        "raven==3.4.0",
+        "twilio==3.6.2",
+        "python-keyczar>=0.71c",
+        #"pygpgme==0.3",
+        "python-gnupg==0.2.8",
+        "isodate==0.5.0",
+        "pytz",  # always want latest
+        "statsd==2.0.3",
+        "gevent==1.0.0",
+        "greenlet==0.4.2",
+        "Pillow==2.4.0",
+        "pyodbc==3.0.7",
+        "simplejson==2.1.1",
+        "lxml==2.2.6",
+        "pycrypto==2.1",
+        "pyasn1==0.1.1",
+    ],
+    zip_safe=False,
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Web Environment",
+        "Framework :: Flask",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: Other/Proprietary License",
+        "Natural Language :: English",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 2.7"
+        "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+        "Topic :: Internet :: WWW/HTTP :: WSGI",
+        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+        "Topic :: Software Development",
+    ],
+)
+
