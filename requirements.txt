@@ -1,2 +1,3 @@
 nose
 mock
+pathlib==1.0.1
